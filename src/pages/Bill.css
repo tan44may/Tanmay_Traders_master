@@ -1,0 +1,11 @@
+.bill-module-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.calc-row .addition {
+  color: #388E3C;
+}

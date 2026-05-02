@@ -6,6 +6,7 @@ import Layout from './components/Layout/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Patti from './pages/Patti';
+import Bill from './pages/Bill';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +38,7 @@ const App = () => {
           <Route path="home" element={<Home />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="patti" element={<Patti />} />
-          <Route path="bill" element={<div className="content-area"><h2>Bill Section</h2></div>} />
+          <Route path="bill" element={<Bill />} />
           <Route path="merchant" element={<div className="content-area"><h2>Merchant Section</h2></div>} />
           <Route path="customer" element={<div className="content-area"><h2>Customer Section</h2></div>} />
           <Route path="bank" element={<div className="content-area"><h2>Bank Section</h2></div>} />
