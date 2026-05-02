@@ -1,0 +1,288 @@
+.patti-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.tabs-container {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 2px solid var(--border-light);
+  padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.tab-btn:hover {
+  background-color: rgba(76, 175, 80, 0.05);
+  color: var(--primary-green);
+}
+
+.tab-btn.active {
+  color: var(--primary-green);
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-green);
+}
+
+.bill-wrapper {
+  padding: 2.5rem;
+  background-color: white; /* Ensure solid background for bill */
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.bill-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.firm-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  color: var(--primary-green);
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.firm-desc {
+  font-weight: 600;
+  color: var(--text-dark);
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.firm-address, .firm-contact {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin: 0.1rem 0;
+}
+
+.bill-divider {
+  height: 2px;
+  background-color: var(--primary-green);
+  margin: 1.5rem 0;
+}
+
+.bill-divider-light {
+  height: 1px;
+  background-color: var(--border-light);
+  margin: 1.5rem 0;
+}
+
+.bill-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 150px;
+}
+
+.form-group.flex-2 {
+  flex: 2;
+  min-width: 250px;
+}
+
+.grid-cols-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.form-group input {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+  background-color: var(--background-white);
+}
+
+.form-group input:focus {
+  border-color: var(--primary-green);
+}
+
+.calculations-section {
+  background-color: #F9FBE7;
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--primary-light);
+}
+
+.calc-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 1.05rem;
+  color: var(--text-dark);
+}
+
+.calc-row .deduction {
+  color: #D32F2F;
+}
+
+.grand-total-row {
+  border-top: 2px solid var(--primary-green);
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary-green);
+}
+
+.bill-actions {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.save-print-btn {
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-light));
+  color: white;
+  border: none;
+  padding: 0.85rem 2rem;
+  border-radius: var(--radius-md);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.save-print-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Records Section */
+.records-wrapper {
+  padding: 2rem;
+}
+
+.records-wrapper h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-dark);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.records-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.records-table th, .records-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.records-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+  background-color: var(--background-white);
+}
+
+.font-bold {
+  font-weight: 700;
+  color: var(--primary-green);
+}
+
+.no-records {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 3rem;
+  background-color: var(--background-white);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-light);
+}
+
+/* Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .printable-area, .printable-area * {
+    visibility: visible;
+  }
+  
+  .printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    border: none;
+    background-color: white;
+  }
+
+  .hide-on-print {
+    display: none !important;
+  }
+
+  /* Make inputs look like text in print */
+  .form-group input {
+    border: none;
+    border-bottom: 1px dashed #ccc;
+    background: transparent;
+    padding: 0.2rem 0;
+    border-radius: 0;
+  }
+
+  .calculations-section {
+    border: 1px solid #ccc;
+    background-color: white;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

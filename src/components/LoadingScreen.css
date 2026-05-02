@@ -1,0 +1,99 @@
+.loading-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--background-white);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.loading-background {
+  position: relative;
+  width: 100%;
+  height: 60vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sun {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.farm-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30%;
+  background: linear-gradient(to bottom, #8D6E63, #5D4037);
+  z-index: 2;
+  border-top: 4px solid var(--primary-green);
+}
+
+.farm-ground-light {
+  position: absolute;
+  bottom: 30%;
+  left: 0;
+  width: 100%;
+  height: 20%;
+  background: linear-gradient(to bottom, #E8F5E9, #C8E6C9);
+  z-index: 1;
+}
+
+.tractor-container {
+  position: absolute;
+  bottom: 25%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+}
+
+.exhaust-smoke {
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  width: 15px;
+  height: 15px;
+  background-color: #BDBDBD;
+  border-radius: 50%;
+  filter: blur(2px);
+}
+
+.crops-container {
+  position: absolute;
+  bottom: 30%;
+  width: 80%;
+  display: flex;
+  justify-content: space-around;
+  z-index: 3;
+}
+
+.loading-text {
+  text-align: center;
+  margin-top: 2rem;
+  z-index: 5;
+}
+
+.loading-text h1 {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 700;
+}
+
+.loading-text p {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  font-weight: 500;
+}

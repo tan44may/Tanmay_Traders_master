@@ -1,0 +1,133 @@
+.navbar {
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  border-bottom: 1px solid var(--border-light);
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  border-radius: 0; /* Override glass panel if it has radius */
+}
+
+.navbar-left, .navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: none; /* Hidden on desktop */
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.menu-btn:hover {
+  background-color: var(--border-light);
+}
+
+.navbar-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.icon-btn:hover {
+  background-color: var(--border-light);
+}
+
+.badge {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background-color: #E53935;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--border-light);
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-light));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.username {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.signout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #FFF0F0;
+  color: #D32F2F;
+  border: 1px solid #FFCDD2;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 1rem;
+}
+
+.signout-btn:hover {
+  background-color: #FFEBEE;
+}
+
+.dashboard-link-btn {
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-light));
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .menu-btn {
+    display: flex;
+  }
+  .username {
+    display: none;
+  }
+  .signout-btn span {
+    display: none;
+  }
+  .signout-btn {
+    padding: 0.5rem;
+  }
+}
