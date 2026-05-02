@@ -7,6 +7,7 @@ const Bill = () => {
   const [activeTab, setActiveTab] = useState('new');
   const [records, setRecords] = useState([]);
   const [viewingRecord, setViewingRecord] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -20,11 +21,23 @@ const Bill = () => {
   });
 
   // Load records on mount
-  useEffect(() => {
-    const savedRecords = localStorage.getItem('billRecords');
-    if (savedRecords) {
-      setRecords(JSON.parse(savedRecords));
+  const fetchRecords = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('https://tanmay-traders.vercel.app/api/bill');
+      const data = await response.json();
+      if (data.success) {
+        setRecords(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching bill records:', error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchRecords();
   }, []);
 
   const handleInputChange = (e) => {
@@ -44,41 +57,63 @@ const Bill = () => {
   
   const grandTotal = totalAmount - tolaiDeduction + commissionTotal;
 
-  const saveRecord = (print = false) => {
+  const saveRecord = async (print = false) => {
     if (!formData.merchantName || !formData.cropName) {
       alert("Please fill in the required fields (Merchant, Crop).");
       return;
     }
 
-    const newRecord = {
-      id: Date.now().toString(),
-      ...formData,
-      totalAmount,
-      tolaiDeduction,
-      commissionTotal,
-      grandTotal,
-      timestamp: new Date().toLocaleString()
-    };
+    try {
+      const payload = {
+        date: formData.date,
+        merchantName: formData.merchantName,
+        cropName: formData.cropName,
+        quantity: Number(formData.quantity) || 0,
+        rate: Number(formData.rate) || 0,
+        tolaiRate: Number(formData.tolaiRate) || 0,
+        commissionRate: Number(formData.commissionRate) || 0,
+        totalAmount: totalAmount,
+        tolaiDeduction: tolaiDeduction,
+        commissionAddition: commissionTotal,
+        grandTotal: grandTotal
+      };
 
-    const updatedRecords = [newRecord, ...records];
-    setRecords(updatedRecords);
-    localStorage.setItem('billRecords', JSON.stringify(updatedRecords));
+      const response = await fetch('https://tanmay-traders.vercel.app/api/bill', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
-    if (print) {
-      setTimeout(() => window.print(), 100);
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchRecords();
+
+        if (print) {
+          setTimeout(() => window.print(), 100);
+        }
+
+        // Reset form
+        setFormData({
+          date: new Date().toISOString().split('T')[0],
+          merchantName: '',
+          cropName: '',
+          quantity: '',
+          rate: '',
+          tolaiRate: '',
+          commissionRate: ''
+        });
+        
+        setActiveTab('records');
+      } else {
+        alert('Failed to save record: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error saving bill record:', error);
+      alert('An error occurred while saving the record.');
     }
-
-    // Reset form
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      merchantName: '',
-      cropName: '',
-      quantity: '',
-      rate: '',
-      tolaiRate: '',
-      commissionRate: ''
-    });
-    setActiveTab('records');
   };
 
   return (
@@ -171,7 +206,7 @@ const Bill = () => {
               </div>
               <div className="calc-row">
                 <span>Commission Added:</span>
-                <span className="addition">+ ₹ {viewingRecord.commissionTotal?.toFixed(2)}</span>
+                <span className="addition">+ ₹ {viewingRecord.commissionAddition?.toFixed(2)}</span>
               </div>
               <div className="calc-row grand-total-row">
                 <span>Grand Total:</span>
@@ -291,7 +326,9 @@ const Bill = () => {
           transition={{ duration: 0.4 }}
         >
           <h2>Bill Records</h2>
-          {records.length === 0 ? (
+          {loading ? (
+            <p className="no-records">Loading records...</p>
+          ) : records.length === 0 ? (
             <p className="no-records">No records found. Create a new bill to see it here.</p>
           ) : (
             <div className="table-responsive">
@@ -308,7 +345,7 @@ const Bill = () => {
                 </thead>
                 <tbody>
                   {records.map((record) => (
-                    <tr key={record.id} onClick={() => setViewingRecord(record)} style={{ cursor: 'pointer' }} title="Click to view bill">
+                    <tr key={record._id || record.id} onClick={() => setViewingRecord(record)} style={{ cursor: 'pointer' }} title="Click to view bill">
                       <td>{record.date}</td>
                       <td>{record.merchantName}</td>
                       <td>{record.cropName}</td>

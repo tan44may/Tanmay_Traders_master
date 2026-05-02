@@ -86,6 +86,39 @@ const Patti = () => {
       const data = await response.json();
       
       if (data.success) {
+        // Automatically create a corresponding bill
+        try {
+          const bTotalAmount = qty * rate;
+          const bTolaiDeduction = tRate * qty;
+          const bCommissionTotal = (bTotalAmount * 1) / 100;
+          const bGrandTotal = bTotalAmount - bTolaiDeduction + bCommissionTotal;
+
+          const billPayload = {
+            date: formData.date,
+            merchantName: formData.merchantName,
+            cropName: formData.cropName,
+            quantity: qty,
+            rate: rate,
+            tolaiRate: tRate,
+            commissionRate: 1,
+            totalAmount: bTotalAmount,
+            tolaiDeduction: bTolaiDeduction,
+            commissionAddition: bCommissionTotal,
+            grandTotal: bGrandTotal
+          };
+          const billResponse = await fetch('https://tanmay-traders.vercel.app/api/bill', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(billPayload)
+          });
+          const billData = await billResponse.json();
+          if (!billData.success) {
+            console.error("Failed to automatically create bill:", billData.message);
+          }
+        } catch (billError) {
+          console.error("Error automatically creating bill:", billError);
+        }
+
         setRecords([data.data, ...records]);
         if (print) {
           window.print();
