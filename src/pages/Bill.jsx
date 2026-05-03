@@ -66,8 +66,8 @@ const Bill = () => {
     try {
       const payload = {
         date: formData.date,
-        merchantName: formData.merchantName,
-        cropName: formData.cropName,
+        merchant: formData.merchantName,
+        crop: formData.cropName,
         quantity: Number(formData.quantity) || 0,
         rate: Number(formData.rate) || 0,
         tolaiRate: Number(formData.tolaiRate) || 0,
@@ -160,14 +160,14 @@ const Bill = () => {
               </div>
               <div className="form-group">
                 <label>Crop Name</label>
-                <input type="text" readOnly value={viewingRecord.cropName} />
+                <input type="text" readOnly value={viewingRecord.crop || viewingRecord.cropName} />
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group flex-2">
                 <label>Merchant Name</label>
-                <input type="text" readOnly value={viewingRecord.merchantName} />
+                <input type="text" readOnly value={viewingRecord.merchant || viewingRecord.merchantName} />
               </div>
             </div>
 
@@ -347,8 +347,8 @@ const Bill = () => {
                   {records.map((record) => (
                     <tr key={record._id || record.id} onClick={() => setViewingRecord(record)} style={{ cursor: 'pointer' }} title="Click to view bill">
                       <td>{record.date}</td>
-                      <td>{record.merchantName}</td>
-                      <td>{record.cropName}</td>
+                      <td>{record.merchant || record.merchantName}</td>
+                      <td>{record.crop || record.cropName}</td>
                       <td>{record.quantity}</td>
                       <td>₹{record.rate}</td>
                       <td className="font-bold">₹{record.grandTotal?.toFixed(2)}</td>
