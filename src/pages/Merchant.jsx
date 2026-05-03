@@ -9,7 +9,8 @@ import {
   Tag, 
   FileText, 
   ChevronRight,
-  UserPlus
+  UserPlus,
+  Trash2
 } from 'lucide-react';
 import './Merchant.css';
 
@@ -142,6 +143,64 @@ const Merchant = () => {
     }
   };
 
+  const deleteMerchant = async (e, id) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this merchant? All their transactions will be lost.")) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`https://tanmay-traders.vercel.app/api/merchant/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMerchants(merchants.filter(m => m._id !== id));
+        alert(data.message);
+      } else {
+        alert("Failed to delete merchant: " + data.message);
+      }
+    } catch (error) {
+      console.error("Error deleting merchant:", error);
+      alert("Error deleting merchant");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteTransaction = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this transaction? Balance will be reverted.")) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`https://tanmay-traders.vercel.app/api/merchant-transactions/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (data.success) {
+        // Refresh transactions and merchants (to get updated balance)
+        await fetchTransactions(selectedMerchant._id);
+        await fetchMerchants();
+        
+        // Refresh the selected merchant object to reflect new balance
+        const updatedMerchantResponse = await fetch(`https://tanmay-traders.vercel.app/api/merchant`);
+        const mData = await updatedMerchantResponse.json();
+        if (mData.success) {
+          const updated = mData.data.find(m => m._id === selectedMerchant._id);
+          if (updated) setSelectedMerchant(updated);
+        }
+
+        alert(data.message);
+      } else {
+        alert("Failed to delete transaction: " + data.message);
+      }
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+      alert("Error deleting transaction");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="merchant-container">
       <div className="merchant-tabs">
@@ -203,6 +262,13 @@ const Merchant = () => {
                       <span className={`amount ${(merchant.balance || 0) >= 0 ? 'positive' : 'negative'}`}>
                         ₹{Math.abs(merchant.balance || 0).toLocaleString()}
                       </span>
+                      <button 
+                        className="delete-merchant-btn"
+                        onClick={(e) => deleteMerchant(e, merchant._id)}
+                        style={{ marginLeft: '15px', color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
                       <ChevronRight size={18} style={{ marginLeft: '10px', color: '#ccc' }} />
                     </div>
                   </div>
@@ -254,8 +320,16 @@ const Merchant = () => {
                       {txn.cropName && <div className="txn-crop"><Tag size={12} /> {txn.cropName}</div>}
                       {txn.billNo && <div className="txn-bill" style={{ fontSize: '0.8rem', color: '#888' }}>Bill No: {txn.billNo}</div>}
                     </div>
-                    <div className={`txn-amount ${txn.type === 'got' ? 'positive' : 'negative'}`}>
+                    <div className={`txn-amount ${txn.type === 'got' ? 'positive' : 'negative'}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
                       ₹{txn.amount.toLocaleString()}
+                      <button 
+                        className="delete-txn-btn"
+                        onClick={() => deleteTransaction(txn._id || txn.id)}
+                        style={{ color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
+                        title="Delete Transaction"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
                   </div>
                 ))}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Printer, Save, FileText, List } from 'lucide-react';
+import { Printer, Save, FileText, List, Trash2 } from 'lucide-react';
 import './Bill.css';
 
 const Bill = () => {
@@ -43,6 +43,30 @@ const Bill = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const deleteRecord = async (e, id) => {
+    e.stopPropagation(); // Prevent opening view modal
+    if (!window.confirm("Are you sure you want to delete this bill?")) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`https://tanmay-traders.vercel.app/api/bill/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (data.success) {
+        setRecords(records.filter(r => (r._id || r.id) !== id));
+        alert(data.message);
+      } else {
+        alert("Failed to delete bill: " + data.message);
+      }
+    } catch (error) {
+      console.error("Error deleting bill:", error);
+      alert("Error deleting bill");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Calculations
@@ -341,6 +365,7 @@ const Bill = () => {
                     <th>Qty</th>
                     <th>Rate</th>
                     <th>Total (₹)</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -352,6 +377,16 @@ const Bill = () => {
                       <td>{record.quantity}</td>
                       <td>₹{record.rate}</td>
                       <td className="font-bold">₹{record.grandTotal?.toFixed(2)}</td>
+                      <td>
+                        <button 
+                          className="delete-btn" 
+                          onClick={(e) => deleteRecord(e, record._id || record.id)}
+                          title="Delete Bill"
+                          style={{ color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
