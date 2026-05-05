@@ -154,6 +154,32 @@ const Bill = () => {
     }
   };
 
+  const formatTime = (dateStr, createdAt) => {
+    const source = createdAt || dateStr;
+    if (!source) return '';
+    try {
+      const date = new Date(source);
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return '';
+    }
+  };
+
+  // Group and calculate records
+  const groupedBills = (records || []).reduce((groups, record) => {
+    const date = record.date?.split('T')[0] || record.date || 'Unknown';
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(record);
+    return groups;
+  }, {});
+
+  const sortedDates = Object.keys(groupedBills).sort((a, b) => new Date(b) - new Date(a));
+  const overallTotal = (records || []).reduce((sum, r) => sum + Number(r.grandTotal || 0), 0);
+
   return (
     <div className="bill-module-container">
       {/* Tabs */}
@@ -193,8 +219,11 @@ const Bill = () => {
           <div className="bill-form">
             <div className="form-row">
               <div className="form-group">
-                <label>Date</label>
-                <input type="text" readOnly value={formatDate(viewingRecord.date)} />
+                <label>Date & Time</label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input type="text" readOnly value={formatDate(viewingRecord.date)} style={{ flex: 1 }} />
+                  <input type="text" readOnly value={formatTime(viewingRecord.date, viewingRecord.createdAt)} style={{ flex: 1 }} />
+                </div>
               </div>
               <div className="form-group">
                 <label>Crop Name</label>
@@ -369,43 +398,80 @@ const Bill = () => {
           ) : records.length === 0 ? (
             <p className="no-records">No records found. Create a new bill to see it here.</p>
           ) : (
-            <div className="table-responsive">
-              <table className="records-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Merchant</th>
-                    <th>Crop</th>
-                    <th>Qty</th>
-                    <th>Rate</th>
-                    <th>Total (₹)</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map((record) => (
-                    <tr key={record._id || record.id} onClick={() => setViewingRecord(record)} style={{ cursor: 'pointer' }} title="Click to view bill">
-                      <td>{formatDate(record.date)}</td>
-                      <td>{record.merchant || record.merchantName}</td>
-                      <td>{record.crop || record.cropName}</td>
-                      <td>{record.quantity}</td>
-                      <td>₹{record.rate}</td>
-                      <td className="font-bold">₹{record.grandTotal?.toFixed(2)}</td>
-                      <td>
-                        <button 
-                          className="delete-btn" 
-                          onClick={(e) => deleteRecord(e, record._id || record.id)}
-                          title="Delete Bill"
-                          style={{ color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {sortedDates.map(date => {
+                const dateGroup = groupedBills[date];
+                const dayTotal = dateGroup.reduce((sum, r) => sum + Number(r.grandTotal || 0), 0);
+                
+                return (
+                  <div key={date} className="date-records-group" style={{ marginBottom: '30px' }}>
+                    <div className="date-group-header" style={{ 
+                      background: '#e3f2fd', 
+                      padding: '10px 15px', 
+                      borderRadius: '8px', 
+                      marginBottom: '10px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{ fontWeight: '700', color: '#1976d2' }}>{formatDate(date)}</span>
+                      <span style={{ fontSize: '0.9rem', color: '#666' }}>Day Total: ₹{dayTotal.toFixed(2)}</span>
+                    </div>
+                    <div className="table-responsive">
+                      <table className="records-table">
+                        <thead>
+                          <tr>
+                            <th>Time</th>
+                            <th>Merchant</th>
+                            <th>Crop</th>
+                            <th>Qty</th>
+                            <th>Rate</th>
+                            <th>Total (₹)</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[...dateGroup].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).map((record) => (
+                            <tr key={record._id || record.id} onClick={() => setViewingRecord(record)} style={{ cursor: 'pointer' }} title="Click to view bill">
+                              <td style={{ fontSize: '0.85rem', color: '#666' }}>{formatTime(record.date, record.createdAt)}</td>
+                              <td>{record.merchant || record.merchantName}</td>
+                              <td>{record.crop || record.cropName}</td>
+                              <td>{record.quantity}</td>
+                              <td>₹{record.rate}</td>
+                              <td className="font-bold">₹{Number(record.grandTotal || 0).toFixed(2)}</td>
+                              <td>
+                                <button 
+                                  className="delete-btn" 
+                                  onClick={(e) => deleteRecord(e, record._id || record.id)}
+                                  title="Delete Bill"
+                                  style={{ color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="records-footer-summary" style={{ 
+                marginTop: '20px', 
+                padding: '20px', 
+                background: '#1976d2', 
+                color: 'white', 
+                borderRadius: '12px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                boxShadow: '0 4px 15px rgba(25, 118, 210, 0.3)'
+              }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: '600' }}>Overall Total (All Bills):</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: '800' }}>₹ {overallTotal.toFixed(2)}</span>
+              </div>
+            </>
           )}
         </motion.div>
       )}

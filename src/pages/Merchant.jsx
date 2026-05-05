@@ -215,10 +215,11 @@ const Merchant = () => {
     }
   };
 
-  const formatTime = (dateStr) => {
-    if (!dateStr) return '';
+  const formatTime = (dateStr, createdAt) => {
+    const source = createdAt || dateStr;
+    if (!source) return '';
     try {
-      const date = new Date(dateStr);
+      const date = new Date(source);
       return date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
@@ -359,7 +360,7 @@ const Merchant = () => {
                       .map(txn => (
                         <div key={txn._id || txn.id} className="transaction-card-new">
                           <div className="txn-info-col">
-                            <div className="txn-time">{formatTime(txn.date) || '10:00 PM'}</div>
+                            <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
                             <div className="txn-balance-chip">बॅलन्स ₹ {selectedMerchant.balance?.toLocaleString()}</div>
                             <div className="txn-desc">{txn.description || (txn.type === 'gave' ? 'You Gave' : 'You Got')}</div>
                             {txn.cropName && <div className="txn-crop-tag"><Tag size={10} /> {txn.cropName}</div>}
