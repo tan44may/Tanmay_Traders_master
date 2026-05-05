@@ -119,8 +119,8 @@ const Patti = () => {
 
           const billPayload = {
             date: formData.date,
-            merchant: formData.merchantName,
-            crop: formData.cropName,
+            merchantName: formData.merchantName,
+            cropName: formData.cropName,
             quantity: qty,
             rate: rate,
             tolaiRate: tRate,

@@ -90,8 +90,8 @@ const Bill = () => {
     try {
       const payload = {
         date: formData.date,
-        merchant: formData.merchantName,
-        crop: formData.cropName,
+        merchantName: formData.merchantName,
+        cropName: formData.cropName,
         quantity: Number(formData.quantity) || 0,
         rate: Number(formData.rate) || 0,
         tolaiRate: Number(formData.tolaiRate) || 0,
