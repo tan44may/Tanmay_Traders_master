@@ -171,6 +171,20 @@ const Patti = () => {
     }
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: '2-digit'
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   return (
     <div className="patti-container">
       {/* Tabs */}
@@ -211,7 +225,7 @@ const Patti = () => {
             <div className="form-row">
               <div className="form-group">
                 <label>Date</label>
-                <input type="text" readOnly value={viewingRecord.date} />
+                <input type="text" readOnly value={formatDate(viewingRecord.date)} />
               </div>
               <div className="form-group">
                 <label>Crop Name</label>
@@ -423,7 +437,7 @@ const Patti = () => {
                 <tbody>
                   {records.map((record) => (
                     <tr key={record._id || record.id} onClick={() => setViewingRecord(record)} style={{ cursor: 'pointer' }} title="Click to view patti">
-                      <td>{record.date}</td>
+                      <td>{formatDate(record.date)}</td>
                       <td>{record.customerName}</td>
                       <td>{record.merchantName}</td>
                       <td>{record.cropName}</td>
@@ -437,7 +451,7 @@ const Patti = () => {
                           title="Delete Record"
                           style={{ color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} />
                         </button>
                       </td>
                     </tr>

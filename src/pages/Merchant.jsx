@@ -201,6 +201,34 @@ const Merchant = () => {
     }
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: '2-digit'
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return '';
+    }
+  };
+
   return (
     <div className="merchant-container">
       <div className="merchant-tabs">
@@ -306,31 +334,53 @@ const Merchant = () => {
             </div>
 
             <div className="transaction-list">
-              {transactions
+              <div className="txn-list-header">
+                <div className="header-info">Entries</div>
+                <div className="header-amount">तुम्ही दिले</div>
+                <div className="header-amount">तुम्हाला मिळाले</div>
+              </div>
+              {Object.keys(transactions
                 .filter(t => t.merchantId === selectedMerchant._id)
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .map(txn => (
-                  <div key={txn.id} className="transaction-card">
-                    <div className="txn-details">
-                      <div className="txn-date">
-                        <Calendar size={12} style={{ marginRight: '5px' }} />
-                        {txn.date}
-                      </div>
-                      <h4>{txn.description || (txn.type === 'gave' ? 'You Gave' : 'You Got')}</h4>
-                      {txn.cropName && <div className="txn-crop"><Tag size={12} /> {txn.cropName}</div>}
-                      {txn.billNo && <div className="txn-bill" style={{ fontSize: '0.8rem', color: '#888' }}>Bill No: {txn.billNo}</div>}
+                .reduce((groups, txn) => {
+                  const date = txn.date?.split('T')[0] || txn.date;
+                  if (!groups[date]) groups[date] = [];
+                  groups[date].push(txn);
+                  return groups;
+                }, {}))
+                .sort((a, b) => new Date(b) - new Date(a))
+                .map(date => (
+                  <div key={date} className="date-group">
+                    <div className="date-divider">
+                      <span>{formatDate(date)}</span>
                     </div>
-                    <div className={`txn-amount ${txn.type === 'got' ? 'positive' : 'negative'}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
-                      ₹{txn.amount.toLocaleString()}
-                      <button 
-                        className="delete-txn-btn"
-                        onClick={() => deleteTransaction(txn._id || txn.id)}
-                        style={{ color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
-                        title="Delete Transaction"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    {transactions
+                      .filter(t => t.merchantId === selectedMerchant._id && (t.date?.split('T')[0] || t.date) === date)
+                      .sort((a, b) => (b._id || b.id).localeCompare(a._id || a.id))
+                      .map(txn => (
+                        <div key={txn._id || txn.id} className="transaction-card-new">
+                          <div className="txn-info-col">
+                            <div className="txn-time">{formatTime(txn.date) || '10:00 PM'}</div>
+                            <div className="txn-balance-chip">बॅलन्स ₹ {selectedMerchant.balance?.toLocaleString()}</div>
+                            <div className="txn-desc">{txn.description || (txn.type === 'gave' ? 'You Gave' : 'You Got')}</div>
+                            {txn.cropName && <div className="txn-crop-tag"><Tag size={10} /> {txn.cropName}</div>}
+                          </div>
+                          
+                          <div className={`txn-amount-col gave ${txn.type === 'gave' ? 'active' : ''}`}>
+                            {txn.type === 'gave' && `₹ ${txn.amount.toLocaleString()}`}
+                          </div>
+                          
+                          <div className={`txn-amount-col got ${txn.type === 'got' ? 'active' : ''}`}>
+                            {txn.type === 'got' && `₹ ${txn.amount.toLocaleString()}`}
+                            <button 
+                              className="delete-txn-btn-abs"
+                              onClick={() => deleteTransaction(txn._id || txn.id)}
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 ))}
             </div>
@@ -340,13 +390,13 @@ const Merchant = () => {
                 className="btn-gave"
                 onClick={() => { setTxnType('gave'); setShowTxnModal(true); }}
               >
-                YOU GAVE ₹
+                तुम्ही दिले ₹
               </button>
               <button 
                 className="btn-got"
                 onClick={() => { setTxnType('got'); setShowTxnModal(true); }}
               >
-                YOU GOT ₹
+                तुम्हाला मिळाले ₹
               </button>
             </div>
           </motion.div>

@@ -140,6 +140,20 @@ const Bill = () => {
     }
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: '2-digit'
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   return (
     <div className="bill-module-container">
       {/* Tabs */}
@@ -180,7 +194,7 @@ const Bill = () => {
             <div className="form-row">
               <div className="form-group">
                 <label>Date</label>
-                <input type="text" readOnly value={viewingRecord.date} />
+                <input type="text" readOnly value={formatDate(viewingRecord.date)} />
               </div>
               <div className="form-group">
                 <label>Crop Name</label>
@@ -371,7 +385,7 @@ const Bill = () => {
                 <tbody>
                   {records.map((record) => (
                     <tr key={record._id || record.id} onClick={() => setViewingRecord(record)} style={{ cursor: 'pointer' }} title="Click to view bill">
-                      <td>{record.date}</td>
+                      <td>{formatDate(record.date)}</td>
                       <td>{record.merchant || record.merchantName}</td>
                       <td>{record.crop || record.cropName}</td>
                       <td>{record.quantity}</td>
