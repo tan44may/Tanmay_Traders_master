@@ -314,13 +314,23 @@ const Customer = () => {
               </div>
             </div>
 
-            <div className="account-summary">
-              <div className="summary-label">Net Balance (Base + Interest)</div>
-              <div className={`amount ${calculateNetBalance(transactions, selectedCustomer.balance) >= 0 ? 'positive' : 'negative'}`}>
-                ₹{Math.abs(calculateNetBalance(transactions, selectedCustomer.balance)).toLocaleString()}
-                <span style={{ fontSize: '0.8rem', marginLeft: '5px' }}>
-                  {calculateNetBalance(transactions, selectedCustomer.balance) >= 0 ? ' (You Get)' : ' (You Give)'}
-                </span>
+            <div className="account-summary-three-col">
+              <div className="summary-item gave">
+                <div className="summary-label">Total Gave</div>
+                <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'gave' ? acc + (txn.interestDetails?.totalAmount || txn.amount) : acc, 0).toLocaleString()}</div>
+              </div>
+              <div className="summary-item got">
+                <div className="summary-label">Total Got</div>
+                <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0).toLocaleString()}</div>
+              </div>
+              <div className={`summary-item net ${calculateNetBalance(transactions, selectedCustomer.balance) >= 0 ? 'positive' : 'negative'}`}>
+                <div className="summary-label">Net Balance</div>
+                <div className="amount">
+                  ₹{Math.abs(calculateNetBalance(transactions, selectedCustomer.balance)).toLocaleString()}
+                  <span className="balance-indicator">
+                    {calculateNetBalance(transactions, selectedCustomer.balance) >= 0 ? ' (Get)' : ' (Give)'}
+                  </span>
+                </div>
               </div>
             </div>
 

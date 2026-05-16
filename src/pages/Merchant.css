@@ -157,15 +157,59 @@
   font-size: 1.2rem;
 }
 
-.account-summary {
+.account-summary-three-col {
   background: white;
-  padding: 15px 20px;
   margin: 15px;
+  padding: 15px;
   border-radius: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border: 1px solid #eee;
+}
+
+.summary-item {
+  text-align: center;
+  padding: 5px;
+}
+
+.summary-item:not(:last-child) {
+  border-right: 1px solid #eee;
+}
+
+.summary-item .summary-label {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-item .amount {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.summary-item.gave .amount {
+  color: #e53935;
+}
+
+.summary-item.got .amount {
+  color: #2e7d32;
+}
+
+.summary-item.net.positive .amount {
+  color: #2e7d32;
+}
+
+.summary-item.net.negative .amount {
+  color: #e53935;
+}
+
+.balance-indicator {
+  font-size: 0.7rem;
+  margin-left: 4px;
 }
 
 .transaction-list {

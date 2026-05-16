@@ -324,13 +324,23 @@ const Merchant = () => {
               </div>
             </div>
 
-            <div className="account-summary">
-              <div className="summary-label">Net Balance</div>
-              <div className={`amount ${(selectedMerchant.balance || 0) >= 0 ? 'positive' : 'negative'}`}>
-                ₹{Math.abs(selectedMerchant.balance || 0).toLocaleString()}
-                <span style={{ fontSize: '0.8rem', marginLeft: '5px' }}>
-                  {(selectedMerchant.balance || 0) >= 0 ? ' (You Get)' : ' (You Give)'}
-                </span>
+            <div className="account-summary-three-col">
+              <div className="summary-item gave">
+                <div className="summary-label">तुम्ही दिले</div>
+                <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'gave' ? acc + txn.amount : acc, 0).toLocaleString()}</div>
+              </div>
+              <div className="summary-item got">
+                <div className="summary-label">तुम्हाला मिळाले</div>
+                <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0).toLocaleString()}</div>
+              </div>
+              <div className={`summary-item net ${(selectedMerchant.balance || 0) >= 0 ? 'positive' : 'negative'}`}>
+                <div className="summary-label">Net Balance</div>
+                <div className="amount">
+                  ₹{Math.abs(selectedMerchant.balance || 0).toLocaleString()}
+                  <span className="balance-indicator">
+                    {(selectedMerchant.balance || 0) >= 0 ? ' (Get)' : ' (Give)'}
+                  </span>
+                </div>
               </div>
             </div>
 
