@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Patti from './pages/Patti';
 import Bill from './pages/Bill';
 import Merchant from './pages/Merchant';
+import Customer from './pages/Customer';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -41,7 +42,7 @@ const App = () => {
           <Route path="patti" element={<Patti />} />
           <Route path="bill" element={<Bill />} />
           <Route path="merchant" element={<Merchant />} />
-          <Route path="customer" element={<div className="content-area"><h2>Customer Section</h2></div>} />
+          <Route path="customer" element={<Customer />} />
           <Route path="bank" element={<div className="content-area"><h2>Bank Section</h2></div>} />
           <Route path="commissions" element={<div className="content-area"><h2>Commissions Section</h2></div>} />
           <Route path="cashbook" element={<div className="content-area"><h2>Cashbook Section</h2></div>} />
