@@ -258,10 +258,10 @@ const Merchant = () => {
             <div className="overall-summary">
               <div className="summary-card">
                 <h4>Overall Outstanding</h4>
-                <div className={`amount ${overallOutstanding >= 0 ? 'positive' : 'negative'}`}>
+                <div className={`amount ${overallOutstanding >= 0 ? 'negative' : 'positive'}`}>
                   ₹{Math.abs(overallOutstanding).toLocaleString()}
                   <span style={{ fontSize: '0.8rem', marginLeft: '5px' }}>
-                    {overallOutstanding >= 0 ? ' (You Get)' : ' (You Owe)'}
+                    {overallOutstanding >= 0 ? ' (You Get)' : ' (You Give)'}
                   </span>
                 </div>
               </div>
@@ -288,7 +288,7 @@ const Merchant = () => {
                     </div>
                     <div className="merchant-balance">
                       <span className="balance-label">{(merchant.balance || 0) >= 0 ? 'You Get' : 'You Give'}</span>
-                      <span className={`amount ${(merchant.balance || 0) >= 0 ? 'positive' : 'negative'}`}>
+                      <span className={`amount ${(merchant.balance || 0) >= 0 ? 'negative' : 'positive'}`}>
                         ₹{Math.abs(merchant.balance || 0).toLocaleString()}
                       </span>
                       <button 
@@ -333,7 +333,7 @@ const Merchant = () => {
                 <div className="summary-label">तुम्हाला मिळाले</div>
                 <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0).toLocaleString()}</div>
               </div>
-              <div className={`summary-item net ${(selectedMerchant.balance || 0) >= 0 ? 'positive' : 'negative'}`}>
+              <div className={`summary-item net ${(selectedMerchant.balance || 0) >= 0 ? 'negative' : 'positive'}`}>
                 <div className="summary-label">Net Balance</div>
                 <div className="amount">
                   ₹{Math.abs(selectedMerchant.balance || 0).toLocaleString()}

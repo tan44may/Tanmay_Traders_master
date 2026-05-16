@@ -248,10 +248,10 @@ const Customer = () => {
             <div className="overall-summary">
               <div className="summary-card">
                 <h4>Overall Outstanding</h4>
-                <div className={`amount ${overallOutstanding >= 0 ? 'positive' : 'negative'}`}>
+                <div className={`amount ${overallOutstanding >= 0 ? 'negative' : 'positive'}`}>
                   ₹{Math.abs(overallOutstanding).toLocaleString()}
                   <span style={{ fontSize: '0.8rem', marginLeft: '5px' }}>
-                    {overallOutstanding >= 0 ? ' (You Get)' : ' (You Owe)'}
+                    {overallOutstanding >= 0 ? ' (You Get)' : ' (You Give)'}
                   </span>
                 </div>
               </div>
@@ -278,7 +278,7 @@ const Customer = () => {
                     </div>
                     <div className="customer-balance">
                       <span className="balance-label">{(customer.balance || 0) >= 0 ? 'You Get' : 'You Give'}</span>
-                      <span className={`amount ${(customer.balance || 0) >= 0 ? 'positive' : 'negative'}`}>
+                      <span className={`amount ${(customer.balance || 0) >= 0 ? 'negative' : 'positive'}`}>
                         ₹{Math.abs(customer.balance || 0).toLocaleString()}
                       </span>
                       <button 
@@ -323,7 +323,7 @@ const Customer = () => {
                 <div className="summary-label">Total Got</div>
                 <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0).toLocaleString()}</div>
               </div>
-              <div className={`summary-item net ${calculateNetBalance(transactions, selectedCustomer.balance) >= 0 ? 'positive' : 'negative'}`}>
+              <div className={`summary-item net ${calculateNetBalance(transactions, selectedCustomer.balance) >= 0 ? 'negative' : 'positive'}`}>
                 <div className="summary-label">Net Balance</div>
                 <div className="amount">
                   ₹{Math.abs(calculateNetBalance(transactions, selectedCustomer.balance)).toLocaleString()}
