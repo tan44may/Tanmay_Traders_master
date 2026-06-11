@@ -16,15 +16,19 @@ import {
 } from 'lucide-react';
 import './Customer.css';
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000'
+  : 'https://tanmay-traders.vercel.app';
+
 const Customer = () => {
   const [activeTab, setActiveTab] = useState('payment'); // 'payment' or 'add'
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showTxnModal, setShowTxnModal] = useState(false);
   const [txnType, setTxnType] = useState('gave'); // 'gave' or 'got'
-  const [expandedTxn, setExpandedTxn] = useState(null);
 
   const [customers, setCustomers] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [ledger, setLedger] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // Load customers on mount
@@ -35,12 +39,19 @@ const Customer = () => {
   const fetchTransactions = async (customerId) => {
     try {
       setLoading(true);
-      const response = await fetch(`https://tanmay-traders.vercel.app/api/customer-transactions/${customerId}`);
+      const response = await fetch(`${API_BASE_URL}/api/customer-transactions/${customerId}`);
       const data = await response.json();
-      setTransactions(Array.isArray(data) ? data : (data?.data || []));
+      if (data?.success && data?.data) {
+        setTransactions(data.data.transactions || []);
+        setLedger(data.data.ledger || null);
+      } else {
+        setTransactions([]);
+        setLedger(null);
+      }
     } catch (error) {
       console.error("Error fetching transactions:", error);
       setTransactions([]);
+      setLedger(null);
     } finally {
       setLoading(false);
     }
@@ -49,7 +60,7 @@ const Customer = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://tanmay-traders.vercel.app/api/customer');
+      const response = await fetch(`${API_BASE_URL}/api/customer`);
       const data = await response.json();
       setCustomers(Array.isArray(data) ? data : (data?.data || []));
     } catch (error) {
@@ -58,14 +69,6 @@ const Customer = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const calculateNetBalance = (txns, baseBalance) => {
-    if (!txns || txns.length === 0) return baseBalance || 0;
-    return txns.reduce((acc, txn) => {
-      const amount = txn.type === 'gave' ? (txn.interestDetails?.totalAmount || txn.amount) : txn.amount;
-      return acc + (txn.type === 'gave' ? amount : -amount);
-    }, 0);
   };
 
   const overallOutstanding = Array.isArray(customers) 
@@ -79,7 +82,7 @@ const Customer = () => {
     
     try {
       setLoading(true);
-      const response = await fetch('https://tanmay-traders.vercel.app/api/customer', {
+      const response = await fetch(`${API_BASE_URL}/api/customer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ customerName: name, contactNumber: phone })
@@ -111,7 +114,7 @@ const Customer = () => {
 
     try {
       setLoading(true);
-      const response = await fetch('https://tanmay-traders.vercel.app/api/customer-transactions', {
+      const response = await fetch(`${API_BASE_URL}/api/customer-transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -141,7 +144,7 @@ const Customer = () => {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this customer?")) return;
     try {
-      const response = await fetch(`https://tanmay-traders.vercel.app/api/customer/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/customer/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -155,7 +158,7 @@ const Customer = () => {
   const deleteTransaction = async (id) => {
     if (!window.confirm("Are you sure you want to delete this transaction?")) return;
     try {
-      const response = await fetch(`https://tanmay-traders.vercel.app/api/customer-transactions/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/customer-transactions/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -314,139 +317,213 @@ const Customer = () => {
               </div>
             </div>
 
-            <div className="account-summary-three-col">
-              <div className="summary-item gave">
-                <div className="summary-label">Total Gave</div>
-                <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'gave' ? acc + (txn.interestDetails?.totalAmount || txn.amount) : acc, 0).toLocaleString()}</div>
-              </div>
-              <div className="summary-item got">
-                <div className="summary-label">Total Got</div>
-                <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0).toLocaleString()}</div>
-              </div>
-              <div className={`summary-item net ${calculateNetBalance(transactions, selectedCustomer.balance) >= 0 ? 'negative' : 'positive'}`}>
-                <div className="summary-label">Net Balance</div>
-                <div className="amount">
-                  ₹{Math.abs(calculateNetBalance(transactions, selectedCustomer.balance)).toLocaleString()}
-                  <span className="balance-indicator">
-                    {calculateNetBalance(transactions, selectedCustomer.balance) >= 0 ? ' (Get)' : ' (Give)'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="transaction-list">
-              <div className="txn-list-header">
-                <div className="header-info">Entries</div>
-                <div className="header-amount">You Gave</div>
-                <div className="header-amount">You Got</div>
-              </div>
-              {Object.keys((Array.isArray(transactions) ? transactions : [])
-                .reduce((groups, txn) => {
-                  const date = txn.date?.split('T')[0] || txn.date;
-                  if (!groups[date]) groups[date] = [];
-                  groups[date].push(txn);
-                  return groups;
-                }, {}))
-                .sort((a, b) => new Date(b) - new Date(a))
-                .map(date => (
-                  <div key={date} className="date-group">
-                    <div className="date-divider">
-                      <span>{formatDate(date)}</span>
+            {(() => {
+              const netVal = ledger ? ledger.netBalance : (selectedCustomer.balance || 0);
+              return (
+                <>
+                  <div className="account-summary-three-col">
+                    <div className="summary-item gave">
+                      <div className="summary-label">Total Gave</div>
+                      <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'gave' ? acc + txn.amount : acc, 0).toLocaleString()}</div>
                     </div>
-                    {transactions
-                      .filter(t => (t.date?.split('T')[0] || t.date) === date)
-                      .map(txn => {
-                        const duration = calculateDuration(txn.date);
-                        const interestAmount = calculateInterest(txn.amount, txn.interestRate || 0, duration);
-                        const totalAmount = txn.amount + interestAmount;
-                        const isExpanded = expandedTxn === txn._id;
+                    <div className="summary-item got">
+                      <div className="summary-label">Total Got</div>
+                      <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0).toLocaleString()}</div>
+                    </div>
+                    <div className={`summary-item net ${netVal >= 0 ? 'negative' : 'positive'}`}>
+                      <div className="summary-label">Net Balance</div>
+                      <div className="amount">
+                        ₹{Math.abs(netVal).toLocaleString()}
+                        <span className="balance-indicator">
+                          {netVal >= 0 ? ' (Get)' : ' (Give)'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-                        return (
-                          <div 
-                            key={txn._id} 
-                            className="transaction-card-new"
-                            onClick={() => setExpandedTxn(isExpanded ? null : txn._id)}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <div className="txn-info-col">
-                              <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
-                              <div className="txn-desc">
-
-                                {txn.description || (txn.type === 'gave' ? 'You Gave' : 'You Got')}
+                  <div className="account-body-split">
+                    {/* Left Column: Transaction Entries */}
+                    <div className="ledger-col">
+                      <div className="transaction-list">
+                        <div className="txn-list-header">
+                          <div className="header-info">Entries</div>
+                          <div className="header-amount">You Gave</div>
+                          <div className="header-amount">You Got</div>
+                        </div>
+                        {Object.keys((Array.isArray(transactions) ? transactions : [])
+                          .reduce((groups, txn) => {
+                            const date = txn.date?.split('T')[0] || txn.date;
+                            if (!groups[date]) groups[date] = [];
+                            groups[date].push(txn);
+                            return groups;
+                          }, {}))
+                          .sort((a, b) => new Date(b) - new Date(a))
+                          .map(date => (
+                            <div key={date} className="date-group">
+                              <div className="date-divider">
+                                <span>{formatDate(date)}</span>
                               </div>
-                              
-                              {isExpanded && (
-                                <motion.div 
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: 'auto' }}
-                                  className="txn-interest-details"
-                                >
-                                  <div className="interest-item">
-                                    <span className="interest-label">Base Amount</span>
-                                    <span className="interest-value">₹{txn.amount.toLocaleString()}</span>
+                              {transactions
+                                .filter(t => (t.date?.split('T')[0] || t.date) === date)
+                                .map(txn => {
+                                  return (
+                                    <div 
+                                      key={txn._id} 
+                                      className="transaction-card-new simple-entry"
+                                    >
+                                      <div className="txn-info-col">
+                                        <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
+                                        <div className="txn-desc">
+                                          {txn.description || (txn.type === 'gave' ? 'You Gave' : 'You Got')}
+                                        </div>
+                                        {txn.type === 'gave' && txn.interestRate > 0 && (
+                                          <div className="txn-rate-badge">
+                                            <Percent size={10} style={{ marginRight: '2px' }} />
+                                            {txn.interestRate}% Interest
+                                          </div>
+                                        )}
+                                        {txn.billNo && (
+                                          <div className="txn-bill-no">
+                                            Bill No: {txn.billNo}
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      <div className={`txn-amount-col gave ${txn.type === 'gave' ? 'active' : ''}`}>
+                                        {txn.type === 'gave' && `₹ ${txn.amount.toLocaleString()}`}
+                                      </div>
+                                      
+                                      <div className={`txn-amount-col got ${txn.type === 'got' ? 'active' : ''}`}>
+                                        {txn.type === 'got' && `₹ ${txn.amount.toLocaleString()}`}
+                                        <button 
+                                          className="delete-txn-btn-abs"
+                                          onClick={(e) => { e.stopPropagation(); deleteTransaction(txn._id); }}
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Right Column: Interest Ledger Breakdown */}
+                    <div className="interest-col">
+                      <div className="interest-ledger-card">
+                        <div className="card-header-premium">
+                          <Percent size={18} className="header-icon" />
+                          <h3>Outstanding Loans & Interest</h3>
+                        </div>
+
+                        <div className="card-body-premium">
+                          {ledger?.activeLoans && ledger.activeLoans.length > 0 ? (
+                            <div className="active-loans-list">
+                              {ledger.activeLoans.map((loan, idx) => (
+                                <div key={loan._id || idx} className="active-loan-item">
+                                  <div className="loan-item-header">
+                                    <span className="loan-badge">Loan #{ledger.activeLoans.length - idx}</span>
+                                    <span className="loan-date">{formatDate(loan.date)}</span>
                                   </div>
-                                  {txn.type === 'gave' && (
-                                    <>
-                                      <div className="interest-item">
-                                        <span className="interest-label">Interest Rate</span>
-                                        <span className="interest-value">{txn.interestRate || 0}% / month</span>
+                                  
+                                  <div className="loan-details-grid">
+                                    <div className="detail-row">
+                                      <span className="label">Original Amount:</span>
+                                      <span className="value">₹{loan.originalAmount.toLocaleString()}</span>
+                                    </div>
+                                    {loan.currentPrincipal !== loan.originalAmount && (
+                                      <div className="detail-row">
+                                        <span className="label text-highlight">Remaining Principal:</span>
+                                        <span className="value text-highlight">₹{loan.currentPrincipal.toLocaleString()}</span>
                                       </div>
-                                      <div className="interest-item">
-                                        <span className="interest-label">Duration</span>
-                                        <span className="interest-value">
-                                          {txn.interestDetails?.duration || `${duration.months} months ${duration.days} days`}
-                                        </span>
-                                      </div>
-                                      <div className="interest-item">
-                                        <span className="interest-label">Interest Amount</span>
-                                        <span className="interest-value">₹{(txn.interestDetails?.interestAmount || interestAmount).toLocaleString()}</span>
-                                      </div>
-                                      <div className="interest-item" style={{ gridColumn: 'span 2', borderTop: '1px solid #ddd', paddingTop: '5px', marginTop: '5px' }}>
-                                        <span className="interest-label">Total Amount</span>
-                                        <span className="interest-value" style={{ fontSize: '1rem', color: '#512da8' }}>
-                                          ₹{(txn.interestDetails?.totalAmount || totalAmount).toLocaleString()}
-                                        </span>
-                                      </div>
-                                    </>
-                                  )}
-                                </motion.div>
+                                    )}
+                                    <div className="detail-row">
+                                      <span className="label">Interest Rate:</span>
+                                      <span className="value">{loan.interestRate}% / month</span>
+                                    </div>
+                                    <div className="detail-row">
+                                      <span className="label">Duration:</span>
+                                      <span className="value flex-row"><Clock size={12} style={{marginRight: '4px'}} /> {loan.duration}</span>
+                                    </div>
+                                    <div className="detail-row">
+                                      <span className="label text-purple">Accrued Interest:</span>
+                                      <span className="value text-purple">+ ₹{loan.interestAmount.toLocaleString()}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="loan-item-footer">
+                                    <span>Outstanding Balance:</span>
+                                    <span className="total-owed-amount">₹{loan.totalAmount.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="empty-loans-state">
+                              <div className="empty-icon-wrapper">
+                                <IndianRupee size={32} />
+                              </div>
+                              {ledger?.prepayment > 0 ? (
+                                <>
+                                  <h4>Prepayment Credit Balance</h4>
+                                  <p className="prepayment-text">The customer has a prepayment credit of <strong style={{color: '#2e7d32'}}>₹{ledger.prepayment.toLocaleString()}</strong>.</p>
+                                </>
+                              ) : (
+                                <>
+                                  <h4>No Active Loans</h4>
+                                  <p>No outstanding amounts. All loans have been fully paid off.</p>
+                                </>
                               )}
                             </div>
-                            
-                            <div className={`txn-amount-col gave ${txn.type === 'gave' ? 'active' : ''}`}>
-                              {txn.type === 'gave' && `₹ ${txn.amount.toLocaleString()}`}
-                            </div>
-                            
-                            <div className={`txn-amount-col got ${txn.type === 'got' ? 'active' : ''}`}>
-                              {txn.type === 'got' && `₹ ${txn.amount.toLocaleString()}`}
-                              <button 
-                                className="delete-txn-btn-abs"
-                                onClick={(e) => { e.stopPropagation(); deleteTransaction(txn._id); }}
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                ))}
-            </div>
+                          )}
+                        </div>
 
-            <div className="account-footer">
-              <button 
-                className="btn-gave"
-                onClick={() => { setTxnType('gave'); setShowTxnModal(true); }}
-              >
-                You Gave ₹
-              </button>
-              <button 
-                className="btn-got"
-                onClick={() => { setTxnType('got'); setShowTxnModal(true); }}
-              >
-                You Got ₹
-              </button>
-            </div>
+                        <div className="card-footer-premium">
+                          <div className="summary-row">
+                            <span>Total Unpaid Principal:</span>
+                            <strong>₹{(ledger?.totalPrincipal || 0).toLocaleString()}</strong>
+                          </div>
+                          <div className="summary-row">
+                            <span>Total Accrued Interest:</span>
+                            <strong className="text-purple">₹{(ledger?.totalInterest || 0).toLocaleString()}</strong>
+                          </div>
+                          {ledger?.prepayment > 0 && (
+                            <div className="summary-row">
+                              <span>Prepayment Credit:</span>
+                              <strong style={{color: '#2e7d32'}}>- ₹{ledger.prepayment.toLocaleString()}</strong>
+                            </div>
+                          )}
+                          <div className="summary-row final-total">
+                            <span>Net Outstanding:</span>
+                            <span className={`net-outstanding-amount ${netVal >= 0 ? 'negative' : 'positive'}`}>
+                              ₹{Math.abs(netVal).toLocaleString()}
+                              <small>{netVal >= 0 ? ' (Get)' : ' (Give)'}</small>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="account-footer">
+                    <button 
+                      className="btn-gave"
+                      onClick={() => { setTxnType('gave'); setShowTxnModal(true); }}
+                    >
+                      You Gave ₹
+                    </button>
+                    <button 
+                      className="btn-got"
+                      onClick={() => { setTxnType('got'); setShowTxnModal(true); }}
+                    >
+                      You Got ₹
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </motion.div>
         )}
 
