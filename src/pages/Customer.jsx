@@ -171,28 +171,6 @@ const Customer = () => {
   };
 
   // Helper Functions
-  const calculateDuration = (startDate) => {
-    const start = new Date(startDate);
-    const end = new Date();
-    
-    let months = (end.getFullYear() - start.getFullYear()) * 12;
-    months += end.getMonth() - start.getMonth();
-    
-    let days = end.getDate() - start.getDate();
-    if (days < 0) {
-      months--;
-      const prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
-      days += prevMonth.getDate();
-    }
-    
-    return { months, days };
-  };
-
-  const calculateInterest = (amount, rate, duration) => {
-    // Interest = Amount * (Rate/100) * (Months + Days/30)
-    const totalMonths = duration.months + (duration.days / 30);
-    return Math.round(amount * (rate / 100) * totalMonths);
-  };
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
