@@ -14,6 +14,10 @@ import {
 } from 'lucide-react';
 import './Merchant.css';
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000'
+  : 'https://tanmay-traders.vercel.app';
+
 const Merchant = () => {
   const [activeTab, setActiveTab] = useState('payment'); // 'payment' or 'add'
   const [selectedMerchant, setSelectedMerchant] = useState(null);
@@ -32,7 +36,7 @@ const Merchant = () => {
   const fetchTransactions = async (merchantId) => {
     try {
       setLoading(true);
-      const response = await fetch(`https://tanmay-traders.vercel.app/api/merchant-transactions/${merchantId}`);
+      const response = await fetch(`${API_BASE_URL}/api/merchant-transactions/${merchantId}`);
       const data = await response.json();
       if (data.success) {
         setTransactions(data.data);
@@ -47,7 +51,7 @@ const Merchant = () => {
   const fetchMerchants = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://tanmay-traders.vercel.app/api/merchant');
+      const response = await fetch(`${API_BASE_URL}/api/merchant`);
       const data = await response.json();
       if (data.success) {
         setMerchants(data.data);
@@ -68,7 +72,7 @@ const Merchant = () => {
     
     try {
       setLoading(true);
-      const response = await fetch('https://tanmay-traders.vercel.app/api/merchant', {
+      const response = await fetch(`${API_BASE_URL}/api/merchant`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -113,7 +117,7 @@ const Merchant = () => {
 
     try {
       setLoading(true);
-      const response = await fetch('https://tanmay-traders.vercel.app/api/merchant-transactions', {
+      const response = await fetch(`${API_BASE_URL}/api/merchant-transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -149,7 +153,7 @@ const Merchant = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`https://tanmay-traders.vercel.app/api/merchant/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/merchant/${id}`, {
         method: 'DELETE'
       });
       const data = await response.json();
@@ -172,7 +176,7 @@ const Merchant = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`https://tanmay-traders.vercel.app/api/merchant-transactions/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/merchant-transactions/${id}`, {
         method: 'DELETE'
       });
       const data = await response.json();
@@ -182,7 +186,7 @@ const Merchant = () => {
         await fetchMerchants();
         
         // Refresh the selected merchant object to reflect new balance
-        const updatedMerchantResponse = await fetch(`https://tanmay-traders.vercel.app/api/merchant`);
+        const updatedMerchantResponse = await fetch(`${API_BASE_URL}/api/merchant`);
         const mData = await updatedMerchantResponse.json();
         if (mData.success) {
           const updated = mData.data.find(m => m._id === selectedMerchant._id);

@@ -10,7 +10,8 @@ import {
   Briefcase, 
   Wallet, 
   UserCheck, 
-  UserSquare2
+  UserSquare2,
+  Leaf
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -25,6 +26,7 @@ const menuItems = [
   { name: 'Cashbook', path: '/cashbook', icon: Wallet },
   { name: 'Employee', path: '/employee', icon: UserCheck },
   { name: 'Self', path: '/self', icon: UserSquare2 },
+  { name: 'Crop', path: '/crop', icon: Leaf }
 ];
 
 const Sidebar = ({ isOpen }) => {

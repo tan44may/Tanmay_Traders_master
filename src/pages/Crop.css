@@ -1,0 +1,169 @@
+.crop-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.crop-header {
+  margin-bottom: 2rem;
+}
+
+.crop-header h2 {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.crop-header .subtitle {
+  color: var(--text-light);
+  font-size: 1rem;
+}
+
+.flex-row-gap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.text-green {
+  color: var(--primary-green, #2e7d32);
+}
+
+.crop-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .crop-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.crop-card {
+  padding: 2rem;
+  border-radius: var(--radius-lg, 16px);
+}
+
+.crop-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-dark);
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 0.75rem;
+}
+
+.add-crop-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.add-crop-form label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+.add-crop-form input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md, 8px);
+  font-size: 1rem;
+  outline: none;
+  background-color: var(--background-white);
+  transition: border-color 0.2s;
+}
+
+.add-crop-form input:focus {
+  border-color: var(--primary-green, #2e7d32);
+}
+
+.submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.85rem;
+  background-color: var(--primary-green, #2e7d32);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.submit-btn:hover {
+  background-color: var(--primary-green-dark, #1b5e20);
+}
+
+.submit-btn:active {
+  transform: scale(0.98);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-light);
+}
+
+.crop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.crop-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1.2rem;
+  background: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md, 8px);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.crop-item:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border-medium);
+}
+
+.crop-item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+.leaf-icon {
+  color: var(--primary-green, #2e7d32);
+}
+
+.delete-crop-btn {
+  background: none;
+  border: none;
+  color: var(--accent-red, #ff4d4d);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.delete-crop-btn:hover {
+  background-color: #ffebee;
+  color: #c62828;
+}

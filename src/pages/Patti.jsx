@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Printer, Save, FileText, List, Trash2 } from 'lucide-react';
 import './Patti.css';
+import SearchableDropdown from '../components/ui/SearchableDropdown';
+
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000'
+  : 'https://tanmay-traders.vercel.app';
 
 const Patti = () => {
   const [activeTab, setActiveTab] = useState('new');
@@ -22,11 +27,14 @@ const Patti = () => {
     other: ''
   });
 
-  // Load records on mount
+  const [merchants, setMerchants] = useState([]);
+  const [crops, setCrops] = useState([]);
+
+  // Load records, merchants, and crops on mount
   useEffect(() => {
     const fetchRecords = async () => {
       try {
-        const response = await fetch('https://tanmay-traders.vercel.app/api/patti');
+        const response = await fetch(`${API_BASE_URL}/api/patti`);
         const data = await response.json();
         if (data.success) {
           setRecords(data.data);
@@ -35,7 +43,34 @@ const Patti = () => {
         console.error("Error fetching records:", error);
       }
     };
+
+    const fetchMerchants = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/merchant`);
+        const data = await response.json();
+        if (data.success) {
+          setMerchants(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching merchants:", error);
+      }
+    };
+
+    const fetchCrops = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/crop`);
+        const data = await response.json();
+        if (data.success) {
+          setCrops(data.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching crops:", error);
+      }
+    };
+
     fetchRecords();
+    fetchMerchants();
+    fetchCrops();
   }, []);
 
   const handleInputChange = (e) => {
@@ -49,7 +84,7 @@ const Patti = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`https://tanmay-traders.vercel.app/api/patti/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/patti/${id}`, {
         method: 'DELETE'
       });
       const data = await response.json();
@@ -102,7 +137,7 @@ const Patti = () => {
 
     try {
       setLoading(true);
-      const response = await fetch('https://tanmay-traders.vercel.app/api/patti', {
+      const response = await fetch(`${API_BASE_URL}/api/patti`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -130,7 +165,7 @@ const Patti = () => {
             commissionAddition: bCommissionTotal,
             grandTotal: bGrandTotal
           };
-          const billResponse = await fetch('https://tanmay-traders.vercel.app/api/bill', {
+          const billResponse = await fetch(`${API_BASE_URL}/api/bill`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(billPayload)
@@ -319,6 +354,10 @@ const Patti = () => {
                 <span>Tolai Deduction:</span>
                 <span className="deduction">- ₹ {viewingRecord.tolaiDeduction?.toFixed(2)}</span>
               </div>
+              <div className="calc-row">
+                <span>Other Charges:</span>
+                <span className="deduction">- ₹ {(viewingRecord.otherCharges || 0).toFixed(2)}</span>
+              </div>
               <div className="calc-row grand-total-row">
                 <span>Grand Total:</span>
                 <span>₹ {viewingRecord.grandTotal?.toFixed(2)}</span>
@@ -361,8 +400,13 @@ const Patti = () => {
                 <input type="date" name="date" value={formData.date} onChange={handleInputChange} />
               </div>
               <div className="form-group">
-                <label>Crop Name</label>
-                <input type="text" name="cropName" placeholder="e.g. Soybean" value={formData.cropName} onChange={handleInputChange} />
+                <SearchableDropdown
+                  label="Crop Name"
+                  options={crops.map(c => c.cropName)}
+                  value={formData.cropName}
+                  onChange={(val) => setFormData(prev => ({ ...prev, cropName: val }))}
+                  placeholder="Search or Select Crop..."
+                />
               </div>
             </div>
 
@@ -372,8 +416,13 @@ const Patti = () => {
                 <input type="text" name="customerName" placeholder="Enter Customer Name" value={formData.customerName} onChange={handleInputChange} />
               </div>
               <div className="form-group flex-2">
-                <label>Merchant Name</label>
-                <input type="text" name="merchantName" placeholder="Enter Merchant Name" value={formData.merchantName} onChange={handleInputChange} />
+                <SearchableDropdown
+                  label="Merchant Name"
+                  options={merchants.map(m => m.merchantName)}
+                  value={formData.merchantName}
+                  onChange={(val) => setFormData(prev => ({ ...prev, merchantName: val }))}
+                  placeholder="Search or Select Merchant..."
+                />
               </div>
             </div>
 
@@ -420,6 +469,10 @@ const Patti = () => {
               <div className="calc-row">
                 <span>Tolai Deduction:</span>
                 <span className="deduction">- ₹ {tolaiTotal.toFixed(2)}</span>
+              </div>
+              <div className="calc-row">
+                <span>Other Charges:</span>
+                <span className="deduction">- ₹ {other.toFixed(2)}</span>
               </div>
               <div className="calc-row grand-total-row">
                 <span>Grand Total:</span>

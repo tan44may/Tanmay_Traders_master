@@ -9,6 +9,7 @@ import Patti from './pages/Patti';
 import Bill from './pages/Bill';
 import Merchant from './pages/Merchant';
 import Customer from './pages/Customer';
+import Crop from './pages/Crop';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -48,6 +49,7 @@ const App = () => {
           <Route path="cashbook" element={<div className="content-area"><h2>Cashbook Section</h2></div>} />
           <Route path="employee" element={<div className="content-area"><h2>Employee Section</h2></div>} />
           <Route path="self" element={<div className="content-area"><h2>Self Section</h2></div>} />
+          <Route path="crop" element={<Crop />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

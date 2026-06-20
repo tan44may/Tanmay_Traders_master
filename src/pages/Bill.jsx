@@ -2,10 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Printer, Save, FileText, List, Trash2 } from 'lucide-react';
 import './Bill.css';
+import SearchableDropdown from '../components/ui/SearchableDropdown';
+
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000'
+  : 'https://tanmay-traders.vercel.app';
 
 const Bill = () => {
   const [activeTab, setActiveTab] = useState('new');
   const [records, setRecords] = useState([]);
+  const [merchants, setMerchants] = useState([]);
+  const [crops, setCrops] = useState([]);
   const [viewingRecord, setViewingRecord] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +31,7 @@ const Bill = () => {
   const fetchRecords = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://tanmay-traders.vercel.app/api/bill');
+      const response = await fetch(`${API_BASE_URL}/api/bill`);
       const data = await response.json();
       if (data.success) {
         setRecords(data.data);
@@ -36,8 +43,34 @@ const Bill = () => {
     }
   };
 
+  const fetchMerchants = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/merchant`);
+      const data = await response.json();
+      if (data.success) {
+        setMerchants(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching merchants:', error);
+    }
+  };
+
+  const fetchCrops = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/crop`);
+      const data = await response.json();
+      if (data.success) {
+        setCrops(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching crops:', error);
+    }
+  };
+
   useEffect(() => {
     fetchRecords();
+    fetchMerchants();
+    fetchCrops();
   }, []);
 
   const handleInputChange = (e) => {
@@ -51,7 +84,7 @@ const Bill = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`https://tanmay-traders.vercel.app/api/bill/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/bill/${id}`, {
         method: 'DELETE'
       });
       const data = await response.json();
@@ -102,7 +135,7 @@ const Bill = () => {
         grandTotal: grandTotal
       };
 
-      const response = await fetch('https://tanmay-traders.vercel.app/api/bill', {
+      const response = await fetch(`${API_BASE_URL}/api/bill`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -317,15 +350,25 @@ const Bill = () => {
                 <input type="date" name="date" value={formData.date} onChange={handleInputChange} />
               </div>
               <div className="form-group">
-                <label>Crop Name</label>
-                <input type="text" name="cropName" placeholder="e.g. Soybean" value={formData.cropName} onChange={handleInputChange} />
+                <SearchableDropdown
+                  label="Crop Name"
+                  options={crops.map(c => c.cropName)}
+                  value={formData.cropName}
+                  onChange={(val) => setFormData(prev => ({ ...prev, cropName: val }))}
+                  placeholder="Search or Select Crop..."
+                />
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group flex-2">
-                <label>Merchant Name</label>
-                <input type="text" name="merchantName" placeholder="Enter Merchant Name" value={formData.merchantName} onChange={handleInputChange} />
+                <SearchableDropdown
+                  label="Merchant Name"
+                  options={merchants.map(m => m.merchantName)}
+                  value={formData.merchantName}
+                  onChange={(val) => setFormData(prev => ({ ...prev, merchantName: val }))}
+                  placeholder="Search or Select Merchant..."
+                />
               </div>
             </div>
 
