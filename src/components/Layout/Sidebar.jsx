@@ -11,7 +11,8 @@ import {
   Wallet, 
   UserCheck, 
   UserSquare2,
-  Leaf
+  Leaf,
+  ClipboardList
 } from 'lucide-react';
 import './Sidebar.css';
 
@@ -22,6 +23,7 @@ const menuItems = [
   { name: 'Merchant', path: '/merchant', icon: Users },
   { name: 'Customer', path: '/customer', icon: UserCircle },
   { name: 'Bank', path: '/bank', icon: Building2 },
+  { name: 'Daily Balance Sheet', path: '/daily-balance', icon: ClipboardList },
   { name: 'Commissions', path: '/commissions', icon: Briefcase },
   { name: 'Cashbook', path: '/cashbook', icon: Wallet },
   { name: 'Employee', path: '/employee', icon: UserCheck },

@@ -9,7 +9,8 @@ import {
   DollarSign, 
   Calendar, 
   FileText,
-  UserPlus
+  UserPlus,
+  Printer
 } from 'lucide-react';
 import './Bank.css';
 
@@ -239,8 +240,8 @@ const Bank = () => {
   const overallBalance = accounts.reduce((acc, curr) => acc + (curr.balance || 0), 0);
 
   return (
-    <div className="bank-container">
-      <div className="bank-tabs">
+    <div className="bank-container printable-area">
+      <div className="bank-tabs hide-on-print">
         <button 
           className={`tab-btn ${activeTab === 'payment' ? 'active' : ''}`}
           onClick={() => { setActiveTab('payment'); setSelectedAccount(null); }}
@@ -324,17 +325,62 @@ const Bank = () => {
             exit={{ opacity: 0, x: -20 }}
             className="account-view"
           >
-            <div className="account-header">
-              <button className="back-btn" onClick={() => setSelectedAccount(null)}>
-                <ArrowLeft size={24} />
-              </button>
-              <div className="account-title">
-                <h2>{selectedAccount.bankName}</h2>
-                <span className="subtitle">
-                  {selectedAccount.accountNumber ? `A/C: ${selectedAccount.accountNumber}` : ''} 
-                  {selectedAccount.ifscCode ? ` • IFSC: ${selectedAccount.ifscCode}` : ''}
-                </span>
+            {/* Print Header */}
+            <div className="print-only-header">
+              <div className="firm-identity">
+                <h1>Tanmay Traders</h1>
+                <p className="subtitle">Soybean, Cotton, Tur, & All grains commission agent</p>
+                <p className="location">Krushi Utpanna Bazar Samiti, Karanja (Lad) Dist. Washim</p>
+                <p className="contact">Mo. No: 9011874112</p>
               </div>
+              <div className="print-report-title">
+                <h2>Bank Account Ledger</h2>
+                <p className="print-date">
+                  Bank: <strong>{selectedAccount.bankName}</strong> 
+                  {selectedAccount.accountNumber ? ` | A/C: ${selectedAccount.accountNumber}` : ''}
+                  {selectedAccount.ifscCode ? ` | IFSC: ${selectedAccount.ifscCode}` : ''}
+                </p>
+                <p className="print-date" style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
+                  Printed on: {new Date().toLocaleDateString('en-GB')}
+                </p>
+              </div>
+            </div>
+
+            <div className="account-header hide-on-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <button className="back-btn" onClick={() => setSelectedAccount(null)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ArrowLeft size={24} />
+                </button>
+                <div className="account-title">
+                  <h2>{selectedAccount.bankName}</h2>
+                  <span className="subtitle">
+                    {selectedAccount.accountNumber ? `A/C: ${selectedAccount.accountNumber}` : ''} 
+                    {selectedAccount.ifscCode ? ` • IFSC: ${selectedAccount.ifscCode}` : ''}
+                  </span>
+                </div>
+              </div>
+              <button 
+                className="print-btn" 
+                onClick={() => window.print()}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.6rem 1.2rem',
+                  backgroundColor: '#2e7d32',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '0.95rem',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                  transition: 'background-color 0.2s'
+                }}
+              >
+                <Printer size={18} />
+                <span>Print Ledger</span>
+              </button>
             </div>
 
             <div className="account-summary-three-col">
@@ -408,7 +454,7 @@ const Bank = () => {
                 ))}
             </div>
 
-            <div className="account-footer">
+            <div className="account-footer hide-on-print">
               <button 
                 className="btn-got"
                 onClick={() => { setTxnType('credit'); setShowTxnModal(true); }}

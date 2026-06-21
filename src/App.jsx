@@ -11,6 +11,7 @@ import Merchant from './pages/Merchant';
 import Customer from './pages/Customer';
 import Crop from './pages/Crop';
 import Bank from './pages/Bank';
+import DailyBalanceSheet from './pages/DailyBalanceSheet';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -46,6 +47,7 @@ const App = () => {
           <Route path="merchant" element={<Merchant />} />
           <Route path="customer" element={<Customer />} />
           <Route path="bank" element={<Bank />} />
+          <Route path="daily-balance" element={<DailyBalanceSheet />} />
           <Route path="commissions" element={<div className="content-area"><h2>Commissions Section</h2></div>} />
           <Route path="cashbook" element={<div className="content-area"><h2>Cashbook Section</h2></div>} />
           <Route path="employee" element={<div className="content-area"><h2>Employee Section</h2></div>} />

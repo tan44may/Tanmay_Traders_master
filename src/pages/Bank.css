@@ -314,3 +314,112 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Print Header hidden by default */
+.print-only-header {
+  display: none;
+}
+
+/* Print styles for Bank page */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  .bank-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .account-view {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .hide-on-print {
+    display: none !important;
+  }
+
+  .print-only-header {
+    display: block !important;
+    margin-bottom: 2rem !important;
+    border-bottom: 3px double #333 !important;
+    padding-bottom: 1.5rem !important;
+    text-align: center;
+  }
+
+  .firm-identity h1 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.8rem !important;
+    color: #2e7d32 !important;
+    margin: 0 0 0.25rem 0 !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .firm-identity .subtitle {
+    font-weight: 700;
+    font-size: 1.2rem !important;
+    margin: 0 0 0.25rem 0 !important;
+  }
+
+  .firm-identity .location, .firm-identity .contact {
+    color: #666 !important;
+    margin: 0.15rem 0 !important;
+    font-size: 0.95rem !important;
+  }
+
+  .print-report-title h2 {
+    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+    margin: 1.5rem 0 0.5rem 0 !important;
+  }
+
+  .print-report-title .print-date {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: #444 !important;
+  }
+
+  .account-summary-three-col {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1rem !important;
+    margin-bottom: 2rem !important;
+  }
+
+  .account-summary-three-col .summary-item {
+    border: 1px solid #ccc !important;
+    background-color: #fafafa !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 0.75rem !important;
+  }
+
+  .account-summary-three-col .summary-item .amount {
+    font-size: 1.3rem !important;
+  }
+
+  .transaction-list {
+    margin-top: 1rem !important;
+  }
+
+  .txn-list-header {
+    background-color: #eaeaea !important;
+    border-bottom: 2px solid #333 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .transaction-card-new {
+    border-bottom: 1px solid #ccc !important;
+    page-break-inside: avoid;
+  }
+
+  .delete-txn-btn-abs {
+    display: none !important;
+  }
+}
