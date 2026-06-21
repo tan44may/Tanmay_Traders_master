@@ -1,0 +1,555 @@
+.commissions-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.commissions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-icon {
+  color: var(--primary-green, #2e7d32);
+}
+
+.header-title h2 {
+  font-size: 1.75rem;
+  color: var(--text-dark, #333);
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.header-title p {
+  margin: 0.25rem 0 0 0;
+  color: var(--text-light, #888);
+  font-size: 0.95rem;
+}
+
+/* Loading state */
+.commissions-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 0;
+  gap: 1rem;
+  color: var(--text-light, #888);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-left-color: var(--primary-green, #2e7d32);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* KPI Dashboard Cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.kpi-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: var(--radius-lg, 16px);
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: var(--shadow-sm, 0 2px 4px rgba(0,0,0,0.05));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 4px 10px rgba(0,0,0,0.08));
+}
+
+.kpi-card.overall {
+  border-left: 5px solid var(--primary-green, #2e7d32);
+}
+
+.kpi-card.current-month {
+  border-left: 5px solid #0284c7;
+}
+
+.card-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.overall .card-icon-wrapper {
+  background-color: rgba(46, 125, 50, 0.1);
+  color: var(--primary-green, #2e7d32);
+}
+
+.current-month .card-icon-wrapper {
+  background-color: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.card-info span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-light, #888);
+  letter-spacing: 0.5px;
+}
+
+.card-info h3 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-dark, #333);
+  margin: 0;
+}
+
+/* Empty state */
+.no-commissions-data {
+  text-align: center;
+  padding: 4rem;
+  background: white;
+  border: 1px dashed var(--border-light, #e0e0e0);
+  border-radius: var(--radius-lg, 16px);
+  color: var(--text-light, #888);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Monthly layout section lists */
+.monthly-sections-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.month-group-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.month-group-header {
+  background-color: #f8f9fa;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.month-group-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-dark, #333);
+  font-weight: 800;
+}
+
+.print-overall-btn, .print-month-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background-color: var(--primary-green, #2e7d32);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.print-overall-btn:hover {
+  background-color: var(--primary-green-dark, #1b5e20);
+  transform: translateY(-1px);
+}
+
+.print-month-btn {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  background-color: #0284c7;
+}
+
+.print-month-btn:hover {
+  background-color: #0369a1;
+  transform: translateY(-1px);
+}
+
+/* Date entry accordion list */
+.date-entries-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.date-row-wrapper {
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s ease;
+}
+
+.date-row-wrapper:hover {
+  background-color: #fcfdfe;
+}
+
+.date-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.1rem 1.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.date-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.date-badge {
+  font-size: 0.95rem;
+  font-weight: 700;
+  background-color: #f0f4f1;
+  color: var(--primary-green, #2e7d32);
+  padding: 0.35rem 0.75rem;
+  border-radius: 30px;
+}
+
+.date-entries-count {
+  font-size: 0.85rem;
+  color: var(--text-light, #888);
+  font-weight: 500;
+}
+
+.date-total-amount {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.date-total-amount .label {
+  font-size: 0.85rem;
+  color: var(--text-light, #888);
+  font-weight: 600;
+}
+
+.date-total-amount .amount {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-dark, #333);
+}
+
+.accordion-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-light, #888);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.date-row-wrapper:hover .accordion-toggle-btn {
+  background-color: #f1f3f4;
+  color: var(--text-dark);
+}
+
+/* Expanded individual entries table */
+.expanded-bills-table-wrapper {
+  padding: 1.25rem 1.5rem;
+  background-color: #fafbfc;
+  border-top: 1px solid #e9ecef;
+  animation: slide-down 0.25s ease-out;
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.expanded-bills-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.expanded-bills-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-light, #888);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #dee2e6;
+  text-align: left;
+}
+
+.expanded-bills-table td {
+  font-size: 0.9rem;
+  color: var(--text-dark, #333);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.expanded-bills-table tr:last-child td {
+  border-bottom: none;
+}
+
+.expanded-bills-table .num-col {
+  text-align: right;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.text-green-commission {
+  color: #10b981 !important;
+}
+
+/* End of Month Total addition summary card */
+.month-total-summary-card {
+  background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+  border-top: 1px solid #81e6d9;
+  padding: 1.25rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-left h4 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #234e52;
+  margin: 0 0 0.15rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-left p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #2c7a7b;
+  opacity: 0.95;
+}
+
+.summary-right span {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #234e52;
+}
+
+/* Responsiveness overrides */
+@media (max-width: 768px) {
+  .commissions-container {
+    padding: 1rem;
+  }
+
+  .date-row-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .date-total-amount {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .expanded-bills-table th, .expanded-bills-table td {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Print Header hidden by default */
+.print-only-header {
+  display: none;
+}
+
+/* Print styles for Commissions page */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  .commissions-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .month-group-card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    margin-bottom: 2rem !important;
+    page-break-inside: avoid;
+  }
+
+  .month-group-header {
+    background: #eaeaea !important;
+    border-bottom: 2px solid #333 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 0.5rem 1rem !important;
+  }
+
+  .month-group-header h3 {
+    font-size: 1.3rem !important;
+    color: black !important;
+  }
+
+  .hide-on-print {
+    display: none !important;
+  }
+
+  .print-only-header {
+    display: block !important;
+    margin-bottom: 2rem !important;
+    border-bottom: 3px double #333 !important;
+    padding-bottom: 1.5rem !important;
+    text-align: center;
+  }
+
+  .firm-identity h1 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.8rem !important;
+    color: #2e7d32 !important;
+    margin: 0 0 0.25rem 0 !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .firm-identity .subtitle {
+    font-weight: 700;
+    font-size: 1.2rem !important;
+    margin: 0 0 0.25rem 0 !important;
+  }
+
+  .firm-identity .location, .firm-identity .contact {
+    color: #666 !important;
+    margin: 0.15rem 0 !important;
+    font-size: 0.95rem !important;
+  }
+
+  .print-report-title h2 {
+    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+    margin: 1.5rem 0 0.5rem 0 !important;
+  }
+
+  .print-report-title .print-date {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: #444 !important;
+  }
+
+  /* Single month print override logic */
+  .print-single-month .month-group-card:not(.printing-this-month) {
+    display: none !important;
+  }
+
+  .date-row-wrapper {
+    background-color: transparent !important;
+    border-bottom: 1px solid #ccc !important;
+    page-break-inside: avoid;
+  }
+
+  .date-row-header {
+    cursor: default !important;
+    padding: 0.75rem 1rem !important;
+    background-color: #fafafa !important;
+    border-bottom: 1px solid #eee !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .date-badge {
+    background: none !important;
+    color: black !important;
+    font-weight: 800 !important;
+    padding: 0 !important;
+  }
+
+  .expanded-bills-table-wrapper {
+    background-color: white !important;
+    border-top: none !important;
+    padding: 0.5rem 1rem 1rem 1rem !important;
+  }
+
+  .expanded-bills-table th {
+    background-color: #f0f0f0 !important;
+    color: black !important;
+    border-bottom: 2px solid #333 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 0.5rem !important;
+  }
+
+  .expanded-bills-table td {
+    border-bottom: 1px solid #eee !important;
+    padding: 0.5rem !important;
+  }
+
+  .month-total-summary-card {
+    background: #eaeaea !important;
+    border: 1px solid #ccc !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 0.75rem 1.5rem !important;
+    margin-top: 1rem !important;
+    page-break-inside: avoid;
+  }
+
+  .month-total-summary-card .summary-left h4 {
+    color: black !important;
+  }
+
+  .month-total-summary-card .summary-left p {
+    color: #444 !important;
+  }
+
+  .month-total-summary-card .summary-right span {
+    color: black !important;
+  }
+}
