@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Building2, 
-  ArrowLeft, 
-  Trash2, 
-  Plus, 
-  Building, 
-  DollarSign, 
-  Calendar, 
+import {
+  Building2,
+  ArrowLeft,
+  Trash2,
+  Plus,
+  Building,
+  DollarSign,
+  Calendar,
   FileText,
   UserPlus,
   Printer
@@ -34,8 +34,10 @@ const Bank = () => {
   const [txnDate, setTxnDate] = useState(new Date().toISOString().split('T')[0]);
 
   const [merchants, setMerchants] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [transactionType, setTransactionType] = useState('cash'); // 'merchant payment', 'cash', 'imps'
   const [selectedMerchantName, setSelectedMerchantName] = useState('');
+  const [selectedCustomerName, setSelectedCustomerName] = useState('');
   const [selectedBank, setSelectedBank] = useState('');
 
   // Load accounts on mount
@@ -66,9 +68,20 @@ const Bank = () => {
     }
   };
 
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/customer`);
+      const data = await response.json();
+      setCustomers(Array.isArray(data) ? data : (data.data || []));
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+    }
+  };
+
   useEffect(() => {
     fetchAccounts();
     fetchMerchants();
+    fetchCustomers();
   }, []);
 
   // Fetch transactions for selected account
@@ -186,7 +199,19 @@ const Bank = () => {
         payload.description = txnDescription;
       }
     } else {
-      payload.description = txnDescription;
+      payload.transactionType = transactionType;
+      if (transactionType === 'cheque' || transactionType === 'rtgs') {
+        if (!selectedCustomerName) {
+          alert('Please select a customer');
+          return;
+        }
+        const customerObj = customers.find(c => c.customerName === selectedCustomerName);
+        if (!customerObj) {
+          alert('Selected customer not found');
+          return;
+        }
+        payload.customerId = customerObj._id;
+      }
     }
 
     try {
@@ -216,6 +241,7 @@ const Bank = () => {
         setTxnDescription('');
         setTransactionType('cash');
         setSelectedMerchantName('');
+        setSelectedCustomerName('');
         setSelectedBank('');
         setTxnDate(new Date().toISOString().split('T')[0]);
       } else {
@@ -292,6 +318,12 @@ const Bank = () => {
       const merchantName = merchantObj ? merchantObj.merchantName : 'Unknown Merchant';
       return `Merchant: ${merchantName}${txn.selectedBank ? ' (' + txn.selectedBank + ')' : ''}`;
     }
+    if ((txn.transactionType === 'cheque' || txn.transactionType === 'rtgs' || txn.transactionType === 'RTGS') && txn.customerId) {
+      const customerIdStr = typeof txn.customerId === 'object' ? txn.customerId._id : txn.customerId;
+      const customerObj = customers.find(c => c._id === customerIdStr);
+      const customerName = customerObj ? customerObj.customerName : 'Unknown Customer';
+      return `Customer: ${customerName} (${txn.transactionType.toUpperCase()})`;
+    }
     return txn.description || (txn.type === 'credit' ? 'Deposit' : 'Withdrawal');
   };
 
@@ -317,13 +349,13 @@ const Bank = () => {
   return (
     <div className="bank-container printable-area">
       <div className="bank-tabs hide-on-print">
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'payment' ? 'active' : ''}`}
           onClick={() => { setActiveTab('payment'); setSelectedAccount(null); }}
         >
           Bank Accounts
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'add' ? 'active' : ''}`}
           onClick={() => setActiveTab('add')}
         >
@@ -333,7 +365,7 @@ const Bank = () => {
 
       <AnimatePresence mode="wait">
         {activeTab === 'payment' && !selectedAccount && (
-          <motion.div 
+          <motion.div
             key="list"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -355,8 +387,8 @@ const Bank = () => {
                 <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No bank accounts found. Add one to get started.</div>
               ) : (
                 accounts.map(account => (
-                  <div 
-                    key={account._id} 
+                  <div
+                    key={account._id}
                     className="bank-item"
                     onClick={() => {
                       setSelectedAccount(account);
@@ -377,7 +409,7 @@ const Bank = () => {
                       <span className={`amount ${(account.balance || 0) >= 0 ? 'positive' : 'negative'}`}>
                         ₹{(account.balance || 0).toLocaleString()}
                       </span>
-                      <button 
+                      <button
                         className="delete-bank-btn"
                         onClick={(e) => deleteAccount(e, account._id)}
                         title="Delete Bank Account"
@@ -393,7 +425,7 @@ const Bank = () => {
         )}
 
         {activeTab === 'payment' && selectedAccount && (
-          <motion.div 
+          <motion.div
             key="details"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -411,7 +443,7 @@ const Bank = () => {
               <div className="print-report-title">
                 <h2>Bank Account Ledger</h2>
                 <p className="print-date">
-                  Bank: <strong>{selectedAccount.bankName}</strong> 
+                  Bank: <strong>{selectedAccount.bankName}</strong>
                   {selectedAccount.accountNumber ? ` | A/C: ${selectedAccount.accountNumber}` : ''}
                   {selectedAccount.ifscCode ? ` | IFSC: ${selectedAccount.ifscCode}` : ''}
                 </p>
@@ -429,13 +461,13 @@ const Bank = () => {
                 <div className="account-title">
                   <h2>{selectedAccount.bankName}</h2>
                   <span className="subtitle">
-                    {selectedAccount.accountNumber ? `A/C: ${selectedAccount.accountNumber}` : ''} 
+                    {selectedAccount.accountNumber ? `A/C: ${selectedAccount.accountNumber}` : ''}
                     {selectedAccount.ifscCode ? ` • IFSC: ${selectedAccount.ifscCode}` : ''}
                   </span>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <button 
+                <button
                   className="btn-got"
                   onClick={() => { setTxnType('credit'); setShowTxnModal(true); }}
                   style={{
@@ -453,7 +485,7 @@ const Bank = () => {
                 >
                   Deposit / जमा ₹
                 </button>
-                <button 
+                <button
                   className="btn-gave"
                   onClick={() => { setTxnType('debit'); setShowTxnModal(true); }}
                   style={{
@@ -471,8 +503,8 @@ const Bank = () => {
                 >
                   Withdraw / नावे ₹
                 </button>
-                <button 
-                  className="print-btn" 
+                <button
+                  className="print-btn"
                   onClick={() => window.print()}
                   style={{
                     display: 'flex',
@@ -547,18 +579,18 @@ const Bank = () => {
                             <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
                             <div className="txn-desc">{getTxnDescription(txn)}</div>
                           </div>
-                          
+
                           <div className={`txn-amount-col gave ${txn.type === 'debit' ? 'active' : ''}`}>
                             {txn.type === 'debit' && `₹ ${txn.amount.toLocaleString()}`}
                           </div>
-                          
+
                           <div className={`txn-amount-col got ${txn.type === 'credit' ? 'active' : ''}`}>
                             {txn.type === 'credit' && `₹ ${txn.amount.toLocaleString()}`}
                           </div>
 
                           <div className="txn-amount-col" style={{ color: '#1976d2', fontWeight: '600' }}>
                             ₹ {txnRunningBalances[txn._id || txn.id]?.toLocaleString()}
-                            <button 
+                            <button
                               className="delete-txn-btn-abs"
                               onClick={() => deleteTransaction(txn._id || txn.id)}
                               title="Delete"
@@ -573,13 +605,13 @@ const Bank = () => {
             </div>
 
             <div className="account-footer hide-on-print">
-              <button 
+              <button
                 className="btn-got"
                 onClick={() => { setTxnType('credit'); setShowTxnModal(true); }}
               >
                 Deposit / जमा ₹
               </button>
-              <button 
+              <button
                 className="btn-gave"
                 onClick={() => { setTxnType('debit'); setShowTxnModal(true); }}
               >
@@ -590,7 +622,7 @@ const Bank = () => {
         )}
 
         {activeTab === 'add' && (
-          <motion.div 
+          <motion.div
             key="add"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -647,12 +679,12 @@ const Bank = () => {
                 <label>Amount (₹) *</label>
                 <div className="amount-input-wrapper">
                   <span className="currency-symbol">₹</span>
-                  <input 
-                    type="number" 
-                    value={txnAmount} 
-                    onChange={(e) => setTxnAmount(e.target.value)} 
-                    placeholder="Enter amount" 
-                    required 
+                  <input
+                    type="number"
+                    value={txnAmount}
+                    onChange={(e) => setTxnAmount(e.target.value)}
+                    placeholder="Enter amount"
+                    required
                     autoFocus
                   />
                 </div>
@@ -662,11 +694,11 @@ const Bank = () => {
                 <label>Date *</label>
                 <div className="input-with-icon">
                   <Calendar size={18} />
-                  <input 
-                    type="date" 
-                    value={txnDate} 
-                    onChange={(e) => setTxnDate(e.target.value)} 
-                    required 
+                  <input
+                    type="date"
+                    value={txnDate}
+                    onChange={(e) => setTxnDate(e.target.value)}
+                    required
                   />
                 </div>
               </div>
@@ -703,7 +735,7 @@ const Bank = () => {
                           placeholder="Search or Select Merchant..."
                         />
                       </div>
-                      
+
                       <div className="form-group">
                         <label>Bank *</label>
                         <select
@@ -738,11 +770,11 @@ const Bank = () => {
                       <label>Description / Remarks *</label>
                       <div className="input-with-icon">
                         <FileText size={18} />
-                        <input 
-                          type="text" 
-                          value={txnDescription} 
-                          onChange={(e) => setTxnDescription(e.target.value)} 
-                          placeholder="Enter IMPS transaction description" 
+                        <input
+                          type="text"
+                          value={txnDescription}
+                          onChange={(e) => setTxnDescription(e.target.value)}
+                          placeholder="Enter IMPS transaction description"
                           required
                         />
                       </div>
@@ -750,18 +782,36 @@ const Bank = () => {
                   )}
                 </>
               ) : (
-                <div className="form-group">
-                  <label>Description / Remarks</label>
-                  <div className="input-with-icon">
-                    <FileText size={18} />
-                    <input 
-                      type="text" 
-                      value={txnDescription} 
-                      onChange={(e) => setTxnDescription(e.target.value)} 
-                      placeholder="e.g. Paid to vendor, cash withdrawal" 
-                    />
+                <>
+                  <div className="form-group">
+                    <label>Transaction Type *</label>
+                    <select
+                      value={transactionType}
+                      onChange={(e) => {
+                        setTransactionType(e.target.value);
+                        setSelectedCustomerName('');
+                      }}
+                      className="form-select-new"
+                      required
+                    >
+                      <option value="self">Self</option>
+                      <option value="cheque">Cheque</option>
+                      <option value="rtgs">RTGS</option>
+                    </select>
                   </div>
-                </div>
+
+                  {(transactionType === 'cheque' || transactionType === 'rtgs') && (
+                    <div className="form-group dropdown-field-wrapper">
+                      <SearchableDropdown
+                        label="Customer Name *"
+                        options={customers.map(c => c.customerName)}
+                        value={selectedCustomerName}
+                        onChange={(val) => setSelectedCustomerName(val)}
+                        placeholder="Search or Select Customer..."
+                      />
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="modal-actions">

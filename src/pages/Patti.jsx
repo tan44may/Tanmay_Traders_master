@@ -28,6 +28,7 @@ const Patti = () => {
   });
 
   const [merchants, setMerchants] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [crops, setCrops] = useState([]);
 
   // Load records, merchants, and crops on mount
@@ -56,6 +57,16 @@ const Patti = () => {
       }
     };
 
+    const fetchCustomers = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/customer`);
+        const data = await response.json();
+        setCustomers(Array.isArray(data) ? data : (data.data || []));
+      } catch (error) {
+        console.error("Error fetching customers:", error);
+      }
+    };
+
     const fetchCrops = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/crop`);
@@ -70,6 +81,7 @@ const Patti = () => {
 
     fetchRecords();
     fetchMerchants();
+    fetchCustomers();
     fetchCrops();
   }, []);
 
@@ -411,9 +423,14 @@ const Patti = () => {
             </div>
 
             <div className="form-row">
-              <div className="form-group flex-2">
-                <label>Customer Name</label>
-                <input type="text" name="customerName" placeholder="Enter Customer Name" value={formData.customerName} onChange={handleInputChange} />
+              <div className="form-group flex-2 dropdown-field-wrapper">
+                <SearchableDropdown
+                  label="Customer Name"
+                  options={customers.map(c => c.customerName)}
+                  value={formData.customerName}
+                  onChange={(val) => setFormData(prev => ({ ...prev, customerName: val }))}
+                  placeholder="Search or Select Customer..."
+                />
               </div>
               <div className="form-group flex-2">
                 <SearchableDropdown
