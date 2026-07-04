@@ -324,6 +324,21 @@ const Bank = () => {
       const customerName = customerObj ? customerObj.customerName : 'Unknown Customer';
       return `Customer: ${customerName} (${txn.transactionType.toUpperCase()})`;
     }
+    if (txn.transactionType === 'self') {
+      return 'Self (सेल्फ)';
+    }
+    if (txn.transactionType === 'cash') {
+      return 'Cash (रोख)';
+    }
+    if (txn.transactionType === 'cheque') {
+      return 'Cheque (चेक)';
+    }
+    if (txn.transactionType === 'rtgs' || txn.transactionType === 'RTGS') {
+      return 'RTGS';
+    }
+    if (txn.transactionType === 'imps' || txn.transactionType === 'IMPS') {
+      return 'IMPS';
+    }
     return txn.description || (txn.type === 'credit' ? 'Deposit' : 'Withdrawal');
   };
 
@@ -469,7 +484,7 @@ const Bank = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <button
                   className="btn-got"
-                  onClick={() => { setTxnType('credit'); setShowTxnModal(true); }}
+                  onClick={() => { setTxnType('credit'); setTransactionType('cash'); setShowTxnModal(true); }}
                   style={{
                     padding: '0.6rem 1.2rem',
                     backgroundColor: '#2e7d32',
@@ -487,7 +502,7 @@ const Bank = () => {
                 </button>
                 <button
                   className="btn-gave"
-                  onClick={() => { setTxnType('debit'); setShowTxnModal(true); }}
+                  onClick={() => { setTxnType('debit'); setTransactionType('self'); setShowTxnModal(true); }}
                   style={{
                     padding: '0.6rem 1.2rem',
                     backgroundColor: '#d32f2f',
@@ -607,13 +622,13 @@ const Bank = () => {
             <div className="account-footer hide-on-print">
               <button
                 className="btn-got"
-                onClick={() => { setTxnType('credit'); setShowTxnModal(true); }}
+                onClick={() => { setTxnType('credit'); setTransactionType('cash'); setShowTxnModal(true); }}
               >
                 Deposit / जमा ₹
               </button>
               <button
                 className="btn-gave"
-                onClick={() => { setTxnType('debit'); setShowTxnModal(true); }}
+                onClick={() => { setTxnType('debit'); setTransactionType('self'); setShowTxnModal(true); }}
               >
                 Withdraw / नावे ₹
               </button>
