@@ -286,12 +286,30 @@ const Customer = () => {
             exit={{ opacity: 0, scale: 1.05 }}
             className="account-view"
           >
-            <div className="account-header">
-              <button className="back-btn" onClick={() => setSelectedCustomer(null)}>
-                <ArrowLeft size={24} />
-              </button>
-              <div className="account-title">
-                <h2>{selectedCustomer.customerName}</h2>
+            <div className="account-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <button className="back-btn" onClick={() => setSelectedCustomer(null)}>
+                  <ArrowLeft size={24} />
+                </button>
+                <div className="account-title">
+                  <h2>{selectedCustomer.customerName}</h2>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }} className="hide-on-print">
+                <button 
+                  className="btn-gave"
+                  onClick={() => { setTxnType('gave'); setShowTxnModal(true); }}
+                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontSize: '0.95rem', flex: 'none', width: 'auto' }}
+                >
+                  You Gave ₹
+                </button>
+                <button 
+                  className="btn-got"
+                  onClick={() => { setTxnType('got'); setShowTxnModal(true); }}
+                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontSize: '0.95rem', flex: 'none', width: 'auto' }}
+                >
+                  You Got ₹
+                </button>
               </div>
             </div>
 

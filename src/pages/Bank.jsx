@@ -13,6 +13,7 @@ import {
   Printer
 } from 'lucide-react';
 import './Bank.css';
+import SearchableDropdown from '../components/ui/SearchableDropdown';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000'
@@ -32,6 +33,11 @@ const Bank = () => {
   const [txnDescription, setTxnDescription] = useState('');
   const [txnDate, setTxnDate] = useState(new Date().toISOString().split('T')[0]);
 
+  const [merchants, setMerchants] = useState([]);
+  const [transactionType, setTransactionType] = useState('cash'); // 'merchant payment', 'cash', 'imps'
+  const [selectedMerchantName, setSelectedMerchantName] = useState('');
+  const [selectedBank, setSelectedBank] = useState('');
+
   // Load accounts on mount
   const fetchAccounts = async () => {
     try {
@@ -48,8 +54,21 @@ const Bank = () => {
     }
   };
 
+  const fetchMerchants = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/merchant`);
+      const data = await response.json();
+      if (data.success) {
+        setMerchants(data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching merchants:', error);
+    }
+  };
+
   useEffect(() => {
     fetchAccounts();
+    fetchMerchants();
   }, []);
 
   // Fetch transactions for selected account
@@ -137,18 +156,45 @@ const Bank = () => {
       return;
     }
 
+    // Prepare payload
+    const payload = {
+      bankAccountId: selectedAccount._id,
+      type: txnType,
+      amount: Number(txnAmount),
+      date: txnDate
+    };
+
+    if (txnType === 'credit') {
+      payload.transactionType = transactionType;
+      if (transactionType === 'merchant payment') {
+        if (!selectedMerchantName) {
+          alert('Please select a merchant');
+          return;
+        }
+        const merchantObj = merchants.find(m => m.merchantName === selectedMerchantName);
+        if (!merchantObj) {
+          alert('Selected merchant not found');
+          return;
+        }
+        if (!selectedBank) {
+          alert('Please select a bank');
+          return;
+        }
+        payload.merchantId = merchantObj._id;
+        payload.selectedBank = selectedBank;
+      } else if (transactionType === 'imps') {
+        payload.description = txnDescription;
+      }
+    } else {
+      payload.description = txnDescription;
+    }
+
     try {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/bank/transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bankAccountId: selectedAccount._id,
-          type: txnType,
-          amount: Number(txnAmount),
-          date: txnDate,
-          description: txnDescription
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
@@ -168,6 +214,9 @@ const Bank = () => {
         setShowTxnModal(false);
         setTxnAmount('');
         setTxnDescription('');
+        setTransactionType('cash');
+        setSelectedMerchantName('');
+        setSelectedBank('');
         setTxnDate(new Date().toISOString().split('T')[0]);
       } else {
         alert(data.message || 'Failed to add transaction');
@@ -236,8 +285,34 @@ const Bank = () => {
     }
   };
 
+  const getTxnDescription = (txn) => {
+    if (txn.transactionType === 'merchant payment' && txn.merchantId) {
+      const merchantIdStr = typeof txn.merchantId === 'object' ? txn.merchantId._id : txn.merchantId;
+      const merchantObj = merchants.find(m => m._id === merchantIdStr);
+      const merchantName = merchantObj ? merchantObj.merchantName : 'Unknown Merchant';
+      return `Merchant: ${merchantName}${txn.selectedBank ? ' (' + txn.selectedBank + ')' : ''}`;
+    }
+    return txn.description || (txn.type === 'credit' ? 'Deposit' : 'Withdrawal');
+  };
+
   // Calculate Overall Net Bank Balance
   const overallBalance = accounts.reduce((acc, curr) => acc + (curr.balance || 0), 0);
+
+  // Compute running balance chronologically (oldest to newest)
+  const accountTxns = selectedAccount ? transactions
+    .filter(t => t.bankAccountId === selectedAccount._id)
+    .sort((a, b) => new Date(a.date) - new Date(b.date) || (a.createdAt || '').localeCompare(b.createdAt || '')) : [];
+
+  let runningBal = 0;
+  const txnRunningBalances = {};
+  accountTxns.forEach(txn => {
+    if (txn.type === 'credit') {
+      runningBal += txn.amount;
+    } else if (txn.type === 'debit') {
+      runningBal -= txn.amount;
+    }
+    txnRunningBalances[txn._id || txn.id] = runningBal;
+  });
 
   return (
     <div className="bank-container printable-area">
@@ -359,28 +434,66 @@ const Bank = () => {
                   </span>
                 </div>
               </div>
-              <button 
-                className="print-btn" 
-                onClick={() => window.print()}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  padding: '0.6rem 1.2rem',
-                  backgroundColor: '#2e7d32',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.95rem',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                  transition: 'background-color 0.2s'
-                }}
-              >
-                <Printer size={18} />
-                <span>Print Ledger</span>
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button 
+                  className="btn-got"
+                  onClick={() => { setTxnType('credit'); setShowTxnModal(true); }}
+                  style={{
+                    padding: '0.6rem 1.2rem',
+                    backgroundColor: '#2e7d32',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '0.95rem',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  Deposit / जमा ₹
+                </button>
+                <button 
+                  className="btn-gave"
+                  onClick={() => { setTxnType('debit'); setShowTxnModal(true); }}
+                  style={{
+                    padding: '0.6rem 1.2rem',
+                    backgroundColor: '#d32f2f',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '0.95rem',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  Withdraw / नावे ₹
+                </button>
+                <button 
+                  className="print-btn" 
+                  onClick={() => window.print()}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.6rem 1.2rem',
+                    backgroundColor: '#1976d2',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '0.95rem',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  <Printer size={18} />
+                  <span>Print Ledger</span>
+                </button>
+              </div>
             </div>
 
             <div className="account-summary-three-col">
@@ -409,6 +522,7 @@ const Bank = () => {
                 <div className="header-info">Transactions</div>
                 <div className="header-amount text-red">Withdraw (नावे)</div>
                 <div className="header-amount text-green">Deposit (जमा)</div>
+                <div className="header-amount text-blue" style={{ color: '#1976d2' }}>Balance (शिल्लक)</div>
               </div>
               {Object.keys(transactions
                 .filter(t => t.bankAccountId === selectedAccount._id)
@@ -431,7 +545,7 @@ const Bank = () => {
                         <div key={txn._id || txn.id} className="transaction-card-new">
                           <div className="txn-info-col">
                             <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
-                            <div className="txn-desc">{txn.description || (txn.type === 'credit' ? 'Deposit' : 'Withdrawal')}</div>
+                            <div className="txn-desc">{getTxnDescription(txn)}</div>
                           </div>
                           
                           <div className={`txn-amount-col gave ${txn.type === 'debit' ? 'active' : ''}`}>
@@ -440,6 +554,10 @@ const Bank = () => {
                           
                           <div className={`txn-amount-col got ${txn.type === 'credit' ? 'active' : ''}`}>
                             {txn.type === 'credit' && `₹ ${txn.amount.toLocaleString()}`}
+                          </div>
+
+                          <div className="txn-amount-col" style={{ color: '#1976d2', fontWeight: '600' }}>
+                            ₹ {txnRunningBalances[txn._id || txn.id]?.toLocaleString()}
                             <button 
                               className="delete-txn-btn-abs"
                               onClick={() => deleteTransaction(txn._id || txn.id)}
@@ -553,18 +671,98 @@ const Bank = () => {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Description / Remarks</label>
-                <div className="input-with-icon">
-                  <FileText size={18} />
-                  <input 
-                    type="text" 
-                    value={txnDescription} 
-                    onChange={(e) => setTxnDescription(e.target.value)} 
-                    placeholder="e.g. Received from customer, cash withdrawal" 
-                  />
+              {txnType === 'credit' ? (
+                <>
+                  <div className="form-group">
+                    <label>Transaction Type *</label>
+                    <select
+                      value={transactionType}
+                      onChange={(e) => {
+                        setTransactionType(e.target.value);
+                        setSelectedMerchantName('');
+                        setSelectedBank('');
+                        setTxnDescription('');
+                      }}
+                      className="form-select-new"
+                      required
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="merchant payment">Merchant Payment</option>
+                      <option value="imps">IMPS</option>
+                    </select>
+                  </div>
+
+                  {transactionType === 'merchant payment' && (
+                    <>
+                      <div className="form-group dropdown-field-wrapper">
+                        <SearchableDropdown
+                          label="Merchant Name *"
+                          options={merchants.map(m => m.merchantName)}
+                          value={selectedMerchantName}
+                          onChange={(val) => setSelectedMerchantName(val)}
+                          placeholder="Search or Select Merchant..."
+                        />
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>Bank *</label>
+                        <select
+                          value={selectedBank}
+                          onChange={(e) => setSelectedBank(e.target.value)}
+                          className="form-select-new"
+                          required
+                        >
+                          <option value="">Select Bank...</option>
+                          <option value="HDFC">HDFC</option>
+                          <option value="AXIS">AXIS</option>
+                          <option value="AKOLA JANTA">AKOLA JANTA</option>
+                          <option value="ICICI">ICICI</option>
+                          <option value="BOI">BOI</option>
+                          <option value="SBI">SBI</option>
+                          <option value="WASHIM URBAN">WASHIM URBAN</option>
+                          <option value="BULDHANA URBAN">BULDHANA URBAN</option>
+                          <option value="SANMITRA URBAN">SANMITRA URBAN</option>
+                          <option value="UNION BANK">UNION BANK</option>
+                          <option value="BANK OF BARODA">BANK OF BARODA</option>
+                          <option value="SUNDARLAL SAWJI">SUNDARLAL SAWJI</option>
+                          <option value="MAHARSHTRA BANK">MAHARSHTRA BANK</option>
+                          <option value="AKOLA URBAN">AKOLA URBAN</option>
+                          <option value="CANARA BANK">CANARA BANK</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {transactionType === 'imps' && (
+                    <div className="form-group">
+                      <label>Description / Remarks *</label>
+                      <div className="input-with-icon">
+                        <FileText size={18} />
+                        <input 
+                          type="text" 
+                          value={txnDescription} 
+                          onChange={(e) => setTxnDescription(e.target.value)} 
+                          placeholder="Enter IMPS transaction description" 
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="form-group">
+                  <label>Description / Remarks</label>
+                  <div className="input-with-icon">
+                    <FileText size={18} />
+                    <input 
+                      type="text" 
+                      value={txnDescription} 
+                      onChange={(e) => setTxnDescription(e.target.value)} 
+                      placeholder="e.g. Paid to vendor, cash withdrawal" 
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowTxnModal(false)}>Cancel</button>

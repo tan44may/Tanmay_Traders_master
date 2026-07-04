@@ -423,3 +423,365 @@
     display: none !important;
   }
 }
+
+/* Custom styles for transaction modal type dropdowns */
+.form-select-new {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  font-size: 1rem;
+  background-color: white;
+  color: #333;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.form-select-new:focus {
+  border-color: #2e7d32;
+  outline: none;
+  background: #f1f8e9;
+}
+
+/* Override modal content overflow so dropdown is not clipped */
+.modal-content.glass-panel {
+  overflow: visible !important;
+}
+
+/* 4-column transaction list styles to match the new Balance column */
+.bank-container .txn-list-header {
+  display: flex;
+  background: white;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.bank-container .header-info {
+  flex: 2;
+  padding-left: 15px;
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.bank-container .header-amount {
+  flex: 1;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.bank-container .transaction-card-new {
+  background: white;
+  display: flex;
+  border-bottom: 1px solid #eee;
+  min-height: 80px;
+}
+
+.bank-container .txn-info-col {
+  flex: 2;
+  padding: 12px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bank-container .txn-amount-col {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  position: relative;
+}
+
+.bank-container .txn-amount-col.gave {
+  border-left: 1px solid #eee;
+}
+
+.bank-container .txn-amount-col.got {
+  border-left: 1px solid #eee;
+}
+
+.bank-container .txn-amount-col.gave.active {
+  background: rgba(211, 47, 47, 0.02);
+  color: #d32f2f;
+}
+
+.bank-container .txn-amount-col.got.active {
+  background: rgba(46, 125, 50, 0.02);
+  color: #2e7d32;
+}
+
+/* Interactive hover shadow glow */
+.bank-container .transaction-card-new:hover {
+  background: #f9fbf9;
+  box-shadow: inset 3px 0 0 var(--primary-green, #2e7d32);
+}
+
+/* Sticky Footer */
+.bank-container .account-footer {
+  position: sticky;
+  bottom: 0;
+  padding: 20px;
+  background: white;
+  display: flex;
+  gap: 15px;
+  border-top: 1px solid #eee;
+  z-index: 100;
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+}
+
+.bank-container .account-footer button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.bank-container .account-footer .btn-gave {
+  background: #d32f2f;
+}
+
+.bank-container .account-footer .btn-gave:hover {
+  background: #b71c1c;
+  transform: scale(1.02);
+}
+
+.bank-container .account-footer .btn-got {
+  background: #2e7d32;
+}
+
+.bank-container .account-footer .btn-got:hover {
+  background: #1b5e20;
+  transform: scale(1.02);
+}
+
+/* Modal styles for Bank transactions */
+.bank-container .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  padding: 20px;
+}
+
+.bank-container .modal-content.glass-panel {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 480px;
+  padding: 2.25rem 2.5rem;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12), 0 5px 15px rgba(0, 0, 0, 0.08);
+  overflow: visible !important;
+  position: relative;
+  animation: slideUp 0.3s ease-out;
+}
+
+.bank-container .modal-content h3 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 1.75rem;
+  color: var(--text-dark, #1F2937);
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.75rem;
+  text-align: left;
+}
+
+.bank-container .modal-content .form-group {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.bank-container .modal-content label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #4b5563;
+}
+
+/* Amount Input Wrapper */
+.bank-container .amount-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.bank-container .amount-input-wrapper:focus-within {
+  border-color: var(--primary-green, #2e7d32);
+  box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.15);
+  background: #fff;
+}
+
+.bank-container .amount-input-wrapper .currency-symbol {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4b5563;
+  padding-left: 1rem;
+  pointer-events: none;
+}
+
+.bank-container .amount-input-wrapper input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-dark, #1f2937);
+}
+
+/* Input with Icon */
+.bank-container .input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.bank-container .input-with-icon:focus-within {
+  border-color: var(--primary-green, #2e7d32);
+  box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.15);
+  background: #fff;
+}
+
+.bank-container .input-with-icon svg {
+  position: absolute;
+  left: 1rem;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+.bank-container .input-with-icon input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 2.75rem;
+  font-size: 1rem;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text-dark, #1f2937);
+}
+
+/* form select formatting */
+.bank-container .form-select-new {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  background-color: #f9fafb;
+  color: var(--text-dark, #1f2937);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bank-container .form-select-new:focus {
+  border-color: var(--primary-green, #2e7d32);
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.15);
+}
+
+/* Modal Actions and buttons */
+.bank-container .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.bank-container .modal-actions .cancel-btn {
+  padding: 0.75rem 1.5rem;
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bank-container .modal-actions .cancel-btn:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+  transform: translateY(-1px);
+}
+
+.bank-container .modal-actions .cancel-btn:active {
+  transform: translateY(0);
+}
+
+.bank-container .modal-actions .submit-btn {
+  padding: 0.75rem 1.75rem;
+  background: var(--primary-green, #2e7d32);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(46, 125, 50, 0.2);
+}
+
+.bank-container .modal-actions .submit-btn:hover {
+  background: #1b5e20;
+  box-shadow: 0 6px 15px rgba(46, 125, 50, 0.3);
+  transform: translateY(-1px);
+}
+
+.bank-container .modal-actions .submit-btn:active {
+  transform: translateY(0);
+}
+
+.bank-container .modal-actions .submit-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
