@@ -775,6 +775,8 @@ const Bank = () => {
                           <option value="MAHARSHTRA BANK">MAHARSHTRA BANK</option>
                           <option value="AKOLA URBAN">AKOLA URBAN</option>
                           <option value="CANARA BANK">CANARA BANK</option>
+                          <option value="NISHANT MULTISTATE">NISHANT MULTISTATE</option>
+                          <option value="CENTRAL BANK">CENTRAL BANK</option>
                         </select>
                       </div>
                     </>
