@@ -17,6 +17,44 @@ const Bill = () => {
   const [loading, setLoading] = useState(false);
   const [printData, setPrintData] = useState(null);
 
+  const toggleBillCheck = async (id, currentChecked) => {
+    try {
+      // Optimistic update for instant responsiveness
+      setRecords(prev => prev.map(r => {
+        if ((r._id || r.id) === id) {
+          return { ...r, isChecked: !currentChecked };
+        }
+        return r;
+      }));
+
+      const response = await fetch(`${API_BASE_URL}/api/bill/${id}/check`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isChecked: !currentChecked })
+      });
+      const data = await response.json();
+      if (!data.success) {
+        // Revert on API error
+        setRecords(prev => prev.map(r => {
+          if ((r._id || r.id) === id) {
+            return { ...r, isChecked: currentChecked };
+          }
+          return r;
+        }));
+        alert(data.message || 'Failed to update check status');
+      }
+    } catch (error) {
+      console.error('Error toggling check status:', error);
+      // Revert on network error
+      setRecords(prev => prev.map(r => {
+        if ((r._id || r.id) === id) {
+          return { ...r, isChecked: currentChecked };
+        }
+        return r;
+      }));
+    }
+  };
+
   // Form State
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -475,6 +513,7 @@ const Bill = () => {
                       <table className="records-table">
                         <thead>
                           <tr>
+                            <th style={{ width: '40px', textAlign: 'center' }}></th>
                             <th>Time</th>
                             <th>Merchant</th>
                             <th>Crop</th>
@@ -485,26 +524,46 @@ const Bill = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {[...dateGroup].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).map((record) => (
-                            <tr key={record._id || record.id} onClick={() => setViewingRecord(record)} style={{ cursor: 'pointer' }} title="Click to view bill">
-                              <td style={{ fontSize: '0.85rem', color: '#666' }}>{formatTime(record.date, record.createdAt)}</td>
-                              <td>{record.merchant || record.merchantName}</td>
-                              <td>{record.crop || record.cropName}</td>
-                              <td>{record.quantity}</td>
-                              <td>₹{record.rate}</td>
-                              <td className="font-bold">₹{Number(record.grandTotal || 0).toFixed(2)}</td>
-                              <td>
-                                <button 
-                                  className="delete-btn" 
-                                  onClick={(e) => deleteRecord(e, record._id || record.id)}
-                                  title="Delete Bill"
-                                  style={{ color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
-                                >
-                                  <Trash2 size={18} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
+                          {[...dateGroup].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).map((record) => {
+                            const isChecked = !!record.isChecked;
+                            return (
+                              <tr 
+                                key={record._id || record.id} 
+                                onClick={() => setViewingRecord(record)} 
+                                style={{ 
+                                  cursor: 'pointer',
+                                  backgroundColor: isChecked ? '#2E7D32' : '',
+                                  color: isChecked ? 'white' : ''
+                                }} 
+                                title="Click to view bill"
+                              >
+                                <td onClick={(e) => e.stopPropagation()} style={{ width: '40px', textAlign: 'center' }}>
+                                  <input 
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => toggleBillCheck(record._id || record.id, isChecked)}
+                                    style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#2e7d32' }}
+                                  />
+                                </td>
+                                <td style={{ fontSize: '0.85rem', color: isChecked ? '#e8f5e9' : '#666' }}>{formatTime(record.date, record.createdAt)}</td>
+                                <td>{record.merchant || record.merchantName}</td>
+                                <td>{record.crop || record.cropName}</td>
+                                <td>{record.quantity}</td>
+                                <td>₹{record.rate}</td>
+                                <td className="font-bold" style={{ color: isChecked ? 'white' : '' }}>₹{Number(record.grandTotal || 0).toFixed(2)}</td>
+                                <td>
+                                  <button 
+                                    className="delete-btn" 
+                                    onClick={(e) => deleteRecord(e, record._id || record.id)}
+                                    title="Delete Bill"
+                                    style={{ color: isChecked ? '#ff8a80' : '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', padding: '5px' }}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
