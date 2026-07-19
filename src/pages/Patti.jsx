@@ -13,6 +13,7 @@ const Patti = () => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [viewingRecord, setViewingRecord] = useState(null);
+  const [printData, setPrintData] = useState(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -192,7 +193,11 @@ const Patti = () => {
 
         setRecords([data.data, ...records]);
         if (print) {
-          window.print();
+          setPrintData(data.data);
+          setTimeout(() => {
+            window.print();
+            setPrintData(null);
+          }, 150);
         }
         
         setFormData({
@@ -381,7 +386,13 @@ const Patti = () => {
             <button className="save-print-btn" onClick={() => setViewingRecord(null)}>
               <span>Back</span>
             </button>
-            <button className="save-print-btn" onClick={() => window.print()}>
+            <button className="save-print-btn" onClick={() => {
+              setPrintData(viewingRecord);
+              setTimeout(() => {
+                window.print();
+                setPrintData(null);
+              }, 150);
+            }}>
               <Printer size={18} />
               <span>Print</span>
             </button>
@@ -599,6 +610,174 @@ const Patti = () => {
             </>
           )}
         </motion.div>
+      )}
+
+      {printData && (
+        <div className="print-only-layout">
+          <div className="print-double-copy">
+            {/* Copy 1: Customer Copy */}
+            <div className="print-bill-card">
+              <div className="print-copy-indicator">Customer Copy / ग्राहक प्रत</div>
+              <div className="print-header">
+                <h1 className="print-firm-name">Tanmay Traders</h1>
+                <p className="print-firm-desc">Soybean, Cotton, Tur, & All types of grains commission agent</p>
+                <p className="print-firm-sub">Krushi Utpanna Bazar Samiti, Karanja (Lad) Dist. Washim | Mo: 9011874112</p>
+              </div>
+              <div className="print-divider"></div>
+              
+              <div className="print-meta-grid">
+                <div className="print-meta-item">
+                  <span className="print-meta-label">Date / तारीख:</span>
+                  <span className="print-meta-value">{formatDate(printData.date)}</span>
+                </div>
+                <div className="print-meta-item">
+                  <span className="print-meta-label">Time / वेळ:</span>
+                  <span className="print-meta-value">{formatTime(printData.date, printData.createdAt)}</span>
+                </div>
+                <div className="print-meta-item">
+                  <span className="print-meta-label">Customer / शेतकरी:</span>
+                  <span className="print-meta-value">{printData.customerName}</span>
+                </div>
+                <div className="print-meta-item">
+                  <span className="print-meta-label">Merchant / व्यापारी:</span>
+                  <span className="print-meta-value">{printData.merchantName}</span>
+                </div>
+              </div>
+
+              <table className="print-table">
+                <thead>
+                  <tr>
+                    <th>Crop / मालाचे नाव</th>
+                    <th>Qty / वजन (Qtl)</th>
+                    <th>Rate / दर (₹)</th>
+                    <th>Total / एकूण (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{printData.cropName}</td>
+                    <td>{printData.quantity}</td>
+                    <td>₹{printData.rate}</td>
+                    <td>₹{(Number(printData.quantity || 0) * Number(printData.rate || 0)).toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div className="print-summary-layout">
+                <div className="print-signatures">
+                  <div className="print-signature-box">Farmer Signature</div>
+                  <div className="print-signature-box">For Tanmay Traders</div>
+                </div>
+
+                <div className="print-calcs">
+                  <div className="print-calc-row">
+                    <span>Total Amount:</span>
+                    <span>₹ {(Number(printData.quantity || 0) * Number(printData.rate || 0)).toFixed(2)}</span>
+                  </div>
+                  <div className="print-calc-row">
+                    <span>Hamali Deduction:</span>
+                    <span className="print-calc-deduction">- ₹ {Number(printData.hamaliDeduction || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="print-calc-row">
+                    <span>Tolai Deduction:</span>
+                    <span className="print-calc-deduction">- ₹ {Number(printData.tolaiDeduction || 0).toFixed(2)}</span>
+                  </div>
+                  {Number(printData.otherCharges || printData.other || 0) > 0 && (
+                    <div className="print-calc-row">
+                      <span>Other Charges:</span>
+                      <span className="print-calc-deduction">- ₹ {Number(printData.otherCharges || printData.other || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="print-calc-row total">
+                    <span>Grand Total:</span>
+                    <span>₹ {Number(printData.grandTotal || 0).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Copy 2: Owner Copy */}
+            <div className="print-bill-card">
+              <div className="print-copy-indicator">Owner Copy / मालक प्रत</div>
+              <div className="print-header">
+                <h1 className="print-firm-name">Tanmay Traders</h1>
+                <p className="print-firm-desc">Soybean, Cotton, Tur, & All types of grains commission agent</p>
+                <p className="print-firm-sub">Krushi Utpanna Bazar Samiti, Karanja (Lad) Dist. Washim | Mo: 9011874112</p>
+              </div>
+              <div className="print-divider"></div>
+              
+              <div className="print-meta-grid">
+                <div className="print-meta-item">
+                  <span className="print-meta-label">Date / तारीख:</span>
+                  <span className="print-meta-value">{formatDate(printData.date)}</span>
+                </div>
+                <div className="print-meta-item">
+                  <span className="print-meta-label">Time / वेळ:</span>
+                  <span className="print-meta-value">{formatTime(printData.date, printData.createdAt)}</span>
+                </div>
+                <div className="print-meta-item">
+                  <span className="print-meta-label">Customer / शेतकरी:</span>
+                  <span className="print-meta-value">{printData.customerName}</span>
+                </div>
+                <div className="print-meta-item">
+                  <span className="print-meta-label">Merchant / व्यापारी:</span>
+                  <span className="print-meta-value">{printData.merchantName}</span>
+                </div>
+              </div>
+
+              <table className="print-table">
+                <thead>
+                  <tr>
+                    <th>Crop / मालाचे नाव</th>
+                    <th>Qty / वजन (Qtl)</th>
+                    <th>Rate / दर (₹)</th>
+                    <th>Total / एकूण (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{printData.cropName}</td>
+                    <td>{printData.quantity}</td>
+                    <td>₹{printData.rate}</td>
+                    <td>₹{(Number(printData.quantity || 0) * Number(printData.rate || 0)).toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div className="print-summary-layout">
+                <div className="print-signatures">
+                  <div className="print-signature-box">Farmer Signature</div>
+                  <div className="print-signature-box">For Tanmay Traders</div>
+                </div>
+
+                <div className="print-calcs">
+                  <div className="print-calc-row">
+                    <span>Total Amount:</span>
+                    <span>₹ {(Number(printData.quantity || 0) * Number(printData.rate || 0)).toFixed(2)}</span>
+                  </div>
+                  <div className="print-calc-row">
+                    <span>Hamali Deduction:</span>
+                    <span className="print-calc-deduction">- ₹ {Number(printData.hamaliDeduction || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="print-calc-row">
+                    <span>Tolai Deduction:</span>
+                    <span className="print-calc-deduction">- ₹ {Number(printData.tolaiDeduction || 0).toFixed(2)}</span>
+                  </div>
+                  {Number(printData.otherCharges || printData.other || 0) > 0 && (
+                    <div className="print-calc-row">
+                      <span>Other Charges:</span>
+                      <span className="print-calc-deduction">- ₹ {Number(printData.otherCharges || printData.other || 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="print-calc-row total">
+                    <span>Grand Total:</span>
+                    <span>₹ {Number(printData.grandTotal || 0).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -246,46 +246,244 @@
 
 /* Print Styles */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  
-  .printable-area, .printable-area * {
-    visibility: visible;
-  }
-  
-  .printable-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
-    border: none;
-    background-color: white;
+  /* Reset layout wrappers to normal block containers so children aren't hidden */
+  #root, 
+  .layout-container, 
+  .main-content, 
+  .content-area, 
+  .patti-container, 
+  .bill-module-container {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
   }
 
-  .hide-on-print {
+  /* Hide only screen-specific siblings and components */
+  .sidebar, 
+  .navbar, 
+  .sidebar-overlay,
+  .tabs-container,
+  .bill-wrapper, 
+  .records-wrapper, 
+  .modal-overlay,
+  .glass-panel,
+  .hide-on-print,
+  .bill-actions {
     display: none !important;
   }
-
-  /* Make inputs look like text in print */
-  .form-group input, .form-group select {
-    border: none;
-    border-bottom: 1px dashed #ccc;
-    background: transparent;
-    padding: 0.2rem 0;
-    border-radius: 0;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
+  
+  body {
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  .calculations-section {
-    border: 1px solid #ccc;
-    background-color: white;
+  /* Print-only layout container */
+  .print-only-layout {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none;
+    border: none;
+    background-color: white !important;
+  }
+
+  .print-double-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* compact spacing to fit 2 copies on single page */
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px;
+  }
+
+  .print-bill-card {
+    border: 1.5px solid #2e7d32;
+    border-radius: 8px;
+    padding: 12px 18px;
+    background: white !important;
+    box-sizing: border-box;
+    position: relative;
+    page-break-inside: avoid;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  .print-bill-card:not(:last-child) {
+    border-bottom: 2px dashed #2e7d32;
+    padding-bottom: 20px;
+  }
+
+  .print-copy-indicator {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    border: 1.5px solid #2e7d32;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #2e7d32;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: #e8f5e9 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
+  .print-header {
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .print-firm-name {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #2e7d32;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .print-firm-desc {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin: 2px 0;
+    color: #222;
+  }
+
+  .print-firm-sub {
+    font-size: 0.75rem;
+    color: #555;
+    margin: 0;
+  }
+
+  .print-divider {
+    height: 1.5px;
+    background-color: #2e7d32;
+    margin: 6px 0;
+  }
+
+  .print-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px 20px;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+  }
+
+  .print-meta-item {
+    display: flex;
+    align-items: center;
+  }
+
+  .print-meta-label {
+    font-weight: 700;
+    color: #444;
+    width: 120px;
+  }
+
+  .print-meta-value {
+    color: #000;
+    border-bottom: 1px dashed #bbb;
+    flex-grow: 1;
+    font-weight: 600;
+    padding-left: 4px;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 0.85rem;
+  }
+
+  .print-table th, .print-table td {
+    border: 1px solid #bbb;
+    padding: 6px 10px;
+    text-align: left;
+  }
+
+  .print-table th {
+    background-color: #f1f8e9 !important;
+    font-weight: 700;
+    color: #2e7d32;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-summary-layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 8px;
+    font-size: 0.85rem;
+  }
+
+  .print-signatures {
+    display: flex;
+    justify-content: space-between;
+    width: 55%;
+    margin-top: 25px;
+    padding-right: 20px;
+  }
+
+  .print-signature-box {
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #555;
+    border-top: 1px dashed #888;
+    width: 110px;
+    padding-top: 4px;
+  }
+
+  .print-calcs {
+    width: 42%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background-color: #f9fbe7 !important;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px dashed #2e7d32;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-calc-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+  }
+
+  .print-calc-row.total {
+    border-top: 1.5px solid #2e7d32;
+    padding-top: 4px;
+    margin-top: 4px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #2e7d32;
+  }
+
+  .print-calc-deduction {
+    color: #c62828;
+  }
+
+  .print-calc-addition {
+    color: #2e7d32;
+  }
 }
+
+/* Screen styles for print-only container */
+.print-only-layout {
+  display: none;
+}
+
