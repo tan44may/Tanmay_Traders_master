@@ -849,3 +849,111 @@
     max-height: none;
   }
 }
+
+/* ==========================================================================
+   Print / PDF Layout Logic
+   ========================================================================== */
+.print-only-header {
+  display: none;
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .customer-container {
+    padding: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .hide-on-print {
+    display: none !important;
+  }
+
+  .account-view {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  /* Show print header */
+  .print-only-header {
+    display: block !important;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #333;
+    padding-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .firm-identity h1 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.6rem;
+    color: #512da8;
+    margin: 0 0 0.25rem 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .firm-identity .subtitle {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 0 0 0.25rem 0;
+    color: #333;
+  }
+
+  .firm-identity .location {
+    color: #555;
+    margin: 0.15rem 0;
+    font-size: 0.9rem;
+  }
+
+  .print-report-title h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 1.5rem 0 0.5rem 0;
+    color: black;
+  }
+
+  .print-report-title .print-date {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0.2rem 0;
+  }
+
+  /* Make columns stack nicely or align */
+  .account-body-split {
+    grid-template-columns: 1fr !important;
+    display: block !important;
+  }
+
+  .interest-col {
+    page-break-inside: avoid;
+    margin-top: 1.5rem;
+  }
+
+  .transaction-list {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+
+  .txn-list-header {
+    border-bottom: 2px solid #444;
+    background-color: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .transaction-card-new {
+    border-bottom: 1px solid #eee;
+    page-break-inside: avoid;
+  }
+
+  .date-divider span {
+    background: white !important;
+    border: 1px solid #ccc !important;
+  }
+}

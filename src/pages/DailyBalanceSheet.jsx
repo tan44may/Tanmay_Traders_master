@@ -151,38 +151,58 @@ const getMockDataForDate = (dateStr) => {
 };
 
 const DailyBalanceSheet = () => {
+  const [viewMode, setViewMode] = useState('single'); // 'single' or 'range'
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [data, setData] = useState({
     pattis: [],
     bills: [],
     customerTransactions: [],
     merchantTransactions: [],
-    bankTransactions: []
+    bankTransactions: [],
+    otherAccountTransactions: [] // Include new other account transactions
   });
   const [loading, setLoading] = useState(false);
   const [isUsingMockData, setIsUsingMockData] = useState(false);
 
-  // Fetch report data on date change
+  // Fetch report data on date or range change
   useEffect(() => {
     const fetchDailyData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/api/reports/daily-balance?date=${selectedDate}`);
+        let url = `${API_BASE_URL}/api/reports/daily-balance`;
+        if (viewMode === 'range') {
+          url += `?startDate=${startDate}&endDate=${endDate}`;
+        } else {
+          url += `?date=${selectedDate}`;
+        }
+        
+        const response = await fetch(url);
         const result = await response.json();
         
         if (result.success && result.data) {
-          setData(result.data);
+          setData({
+            pattis: result.data.pattis || [],
+            bills: result.data.bills || [],
+            customerTransactions: result.data.customerTransactions || [],
+            merchantTransactions: result.data.merchantTransactions || [],
+            bankTransactions: result.data.bankTransactions || [],
+            otherAccountTransactions: result.data.otherAccountTransactions || []
+          });
           setIsUsingMockData(false);
         } else {
           // Fallback to local mock data generator
-          const mockData = getMockDataForDate(selectedDate);
+          const mockData = getMockDataForDate(viewMode === 'range' ? startDate : selectedDate);
+          mockData.otherAccountTransactions = []; // mock data placeholder
           setData(mockData);
           setIsUsingMockData(true);
         }
       } catch (error) {
         console.warn("Backend API not available. Showing simulated data.");
         // Fallback to local mock data generator
-        const mockData = getMockDataForDate(selectedDate);
+        const mockData = getMockDataForDate(viewMode === 'range' ? startDate : selectedDate);
+        mockData.otherAccountTransactions = []; // mock data placeholder
         setData(mockData);
         setIsUsingMockData(true);
       } finally {
@@ -191,7 +211,7 @@ const DailyBalanceSheet = () => {
     };
 
     fetchDailyData();
-  }, [selectedDate]);
+  }, [selectedDate, startDate, endDate, viewMode]);
 
   // Navigate dates
   const handlePrevDay = () => {
@@ -231,6 +251,9 @@ const DailyBalanceSheet = () => {
   
   const totalMerchGave = data.merchantTransactions.reduce((sum, r) => sum + (r.type === 'gave' ? r.amount : 0), 0);
   const totalMerchGot = data.merchantTransactions.reduce((sum, r) => sum + (r.type === 'got' ? r.amount : 0), 0);
+
+  const totalOtherAccountGave = (data.otherAccountTransactions || []).reduce((sum, r) => sum + (r.type === 'gave' ? r.amount : 0), 0);
+  const totalOtherAccountGot = (data.otherAccountTransactions || []).reduce((sum, r) => sum + (r.type === 'got' ? r.amount : 0), 0);
 
   // Aligned rows matching logic
   const getAlignedRows = () => {
@@ -284,28 +307,64 @@ const DailyBalanceSheet = () => {
     <div className="balance-sheet-container printable-area">
       {/* Date Navigation & Actions Header */}
       <div className="sheet-header-controls hide-on-print">
-        <div className="date-navigator">
-          <button className="nav-btn" onClick={handlePrevDay}>
-            <ChevronLeft size={20} />
-          </button>
-          
-          <div className="date-picker-wrapper">
-            <Calendar size={18} className="calendar-icon" />
-            <input 
-              type="date" 
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="custom-date-picker"
-            />
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="view-mode-toggle" style={{ display: 'flex', background: '#f1f3f4', padding: '4px', borderRadius: '8px', marginRight: '1rem' }}>
+            <button 
+              onClick={() => setViewMode('single')}
+              style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', background: viewMode === 'single' ? 'white' : 'transparent', color: viewMode === 'single' ? '#333' : '#666', boxShadow: viewMode === 'single' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}
+            >
+              Single Day
+            </button>
+            <button 
+              onClick={() => setViewMode('range')}
+              style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', background: viewMode === 'range' ? 'white' : 'transparent', color: viewMode === 'range' ? '#333' : '#666', boxShadow: viewMode === 'range' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}
+            >
+              Date Range
+            </button>
           </div>
 
-          <button className="nav-btn" onClick={handleNextDay}>
-            <ChevronRight size={20} />
-          </button>
+          {viewMode === 'single' ? (
+            <div className="date-navigator" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <button className="nav-btn" onClick={handlePrevDay}>
+                <ChevronLeft size={20} />
+              </button>
+              
+              <div className="date-picker-wrapper">
+                <Calendar size={18} className="calendar-icon" />
+                <input 
+                  type="date" 
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="custom-date-picker"
+                />
+              </div>
 
-          <button className="today-btn" onClick={handleSetToday}>
-            Today
-          </button>
+              <button className="nav-btn" onClick={handleNextDay}>
+                <ChevronRight size={20} />
+              </button>
+
+              <button className="today-btn" onClick={handleSetToday}>
+                Today
+              </button>
+            </div>
+          ) : (
+            <div className="date-navigator" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#666' }}>From</span>
+              <input 
+                type="date" 
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                style={{ padding: '6px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 600, background: 'white' }}
+              />
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#666' }}>To</span>
+              <input 
+                type="date" 
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                style={{ padding: '6px 12px', border: '1px solid #ddd', borderRadius: '6px', fontSize: '0.9rem', fontWeight: 600, background: 'white' }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="actions-wrapper">
@@ -316,7 +375,7 @@ const DailyBalanceSheet = () => {
           )}
           <button className="print-btn" onClick={handlePrint}>
             <Printer size={18} />
-            <span>Print Report</span>
+            <span>PDF / Print</span>
           </button>
         </div>
       </div>
@@ -330,13 +389,21 @@ const DailyBalanceSheet = () => {
           <p className="contact">Mo. No: 9011874112</p>
         </div>
         <div className="print-report-title">
-          <h2>DAILY BALANCE SHEET</h2>
-          <div className="print-date">{formatDateReadable(selectedDate)}</div>
+          <h2>{viewMode === 'range' ? 'BALANCE SHEET STATEMENT' : 'DAILY BALANCE SHEET'}</h2>
+          <div className="print-date">
+            {viewMode === 'range' 
+              ? `Period: ${formatDateReadable(startDate)} to ${formatDateReadable(endDate)}`
+              : formatDateReadable(selectedDate)}
+          </div>
         </div>
       </div>
 
       <div className="readable-date-display hide-on-print">
-        <h3>{formatDateReadable(selectedDate)}</h3>
+        <h3>
+          {viewMode === 'range'
+            ? `Statement: ${formatDateReadable(startDate)} to ${formatDateReadable(endDate)}`
+            : formatDateReadable(selectedDate)}
+        </h3>
       </div>
 
       {loading ? (
@@ -416,6 +483,28 @@ const DailyBalanceSheet = () => {
                 </div>
               </div>
               <div className="card-sub">{data.merchantTransactions.length} Entries Added</div>
+            </motion.div>
+
+            {/* Other Accounts Transactions Card */}
+            <motion.div 
+              className="metric-card investor"
+              whileHover={{ y: -4 }}
+            >
+              <div className="card-header">
+                <span className="icon-wrapper"><Users size={20} style={{ color: '#512da8' }} /></span>
+                <span className="card-label">Other Accounts Cashbook</span>
+              </div>
+              <div className="card-split-values">
+                <div className="split-val gave">
+                  <span className="label">Gave (Dr):</span>
+                  <span>₹ {totalOtherAccountGave.toLocaleString()}</span>
+                </div>
+                <div className="split-val got">
+                  <span className="label">Got (Cr):</span>
+                  <span>₹ {totalOtherAccountGot.toLocaleString()}</span>
+                </div>
+              </div>
+              <div className="card-sub">{(data.otherAccountTransactions || []).length} Entries Added</div>
             </motion.div>
           </div>
 

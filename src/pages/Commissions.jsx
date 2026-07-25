@@ -24,10 +24,16 @@ const Commissions = () => {
   const [isPrintingOverall, setIsPrintingOverall] = useState(false);
   const [printingMonth, setPrintingMonth] = useState(null);
 
+  // Date Range State
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [isPrintingRange, setIsPrintingRange] = useState(false);
+
   useEffect(() => {
     const handleAfterPrint = () => {
       setIsPrintingOverall(false);
       setPrintingMonth(null);
+      setIsPrintingRange(false);
     };
     window.addEventListener('afterprint', handleAfterPrint);
     return () => {
@@ -44,6 +50,13 @@ const Commissions = () => {
 
   const handlePrintMonth = (monthKey) => {
     setPrintingMonth(monthKey);
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  };
+
+  const handlePrintRange = () => {
+    setIsPrintingRange(true);
     setTimeout(() => {
       window.print();
     }, 150);
@@ -86,6 +99,20 @@ const Commissions = () => {
     return dateStr;
   };
 
+  const formatDateDisplayLong = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   // Helper to format month name (e.g. "2026-06" -> "June 2026")
   const formatMonthHeader = (monthStr) => {
     if (!monthStr) return '';
@@ -94,8 +121,19 @@ const Commissions = () => {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
-  // 1. Group bills by Month (e.g. "2026-06")
-  const groupedByMonth = bills.reduce((acc, bill) => {
+  // Filter bills by custom date range
+  const filteredBills = bills.filter(bill => {
+    if (!bill.date) return false;
+    if (startDate && bill.date < startDate) return false;
+    if (endDate && bill.date > endDate) return false;
+    return true;
+  });
+
+  // Calculate sum of commission for active selection
+  const rangeCommissionSum = filteredBills.reduce((acc, bill) => acc + (bill.commissionAddition || 0), 0);
+
+  // Group filtered bills by Month
+  const groupedByMonth = filteredBills.reduce((acc, bill) => {
     if (!bill.date) return acc;
     const monthKey = bill.date.substring(0, 7); // "YYYY-MM"
     if (!acc[monthKey]) {
@@ -109,7 +147,7 @@ const Commissions = () => {
   const sortedMonths = Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a));
 
   return (
-    <div className={`commissions-container printable-area ${printingMonth ? 'print-single-month' : ''}`}>
+    <div className={`commissions-container printable-area ${printingMonth ? 'print-single-month' : ''} ${isPrintingRange ? 'print-range-report' : ''}`}>
       {/* Print Header for Overall */}
       {isPrintingOverall && (
         <div className="print-only-header">
@@ -122,6 +160,27 @@ const Commissions = () => {
           <div className="print-report-title">
             <h2>Overall Commission Agent Ledger</h2>
             <p className="print-date">All-Time Aggregated Commission Report</p>
+            <p className="print-date" style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
+              Printed on: {new Date().toLocaleDateString('en-GB')}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Print Header for Range */}
+      {isPrintingRange && (
+        <div className="print-only-header">
+          <div className="firm-identity">
+            <h1>Tanmay Traders</h1>
+            <p className="subtitle">Soybean, Cotton, Tur, & All grains commission agent</p>
+            <p className="location">Krushi Utpanna Bazar Samiti, Karanja (Lad) Dist. Washim</p>
+            <p className="contact">Mo. No: 9011874112</p>
+          </div>
+          <div className="print-report-title">
+            <h2>Commission Agent Ledger (Date Range)</h2>
+            <p className="print-date">
+              Period: <strong>{startDate ? formatDateDisplayLong(startDate) : 'Start'} to {endDate ? formatDateDisplayLong(endDate) : 'End'}</strong>
+            </p>
             <p className="print-date" style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
               Printed on: {new Date().toLocaleDateString('en-GB')}
             </p>
@@ -149,7 +208,7 @@ const Commissions = () => {
       )}
 
       {/* Header */}
-      <div className="commissions-header hide-on-print">
+      <div className="commissions-header hide-on-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
         <div className="header-title">
           <Briefcase size={28} className="header-icon" />
           <div>
@@ -157,10 +216,43 @@ const Commissions = () => {
             <p>Track daily, monthly, and overall grain broker commissions</p>
           </div>
         </div>
-        <button className="print-overall-btn" onClick={handlePrintOverall}>
-          <Printer size={18} />
-          <span>Print Overall Report</span>
-        </button>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          {(startDate || endDate) && (
+            <button className="print-overall-btn" onClick={handlePrintRange} style={{ backgroundColor: '#0284c7' }}>
+              <Printer size={18} />
+              <span>Print Range Report</span>
+            </button>
+          )}
+          <button className="print-overall-btn" onClick={handlePrintOverall}>
+            <Printer size={18} />
+            <span>Print Overall Report</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Date Range Selector Panel */}
+      <div className="date-range-panel hide-on-print" style={{ background: '#fcfcfd', border: '1px solid #eef0f2', borderRadius: '12px', padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '1.5rem' }}>
+        <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', fontSize: '0.9rem', color: '#4a5568' }}>
+          <Calendar size={16} />
+          <span>Filter Commission by Date Range</span>
+        </div>
+        <div className="inputs-row" style={{ display: 'flex', alignItems: 'flex-end', gap: '15px', flexWrap: 'wrap' }}>
+          <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: '1', minWidth: '150px' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#718096', textTransform: 'uppercase' }}>Start Date</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', fontSize: '0.9rem' }} />
+          </div>
+          <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: '1', minWidth: '150px' }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#718096', textTransform: 'uppercase' }}>End Date</label>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', fontSize: '0.9rem' }} />
+          </div>
+          <div className="buttons-group">
+            {(startDate || endDate) && (
+              <button className="clear-btn" onClick={() => { setStartDate(''); setEndDate(''); }} style={{ padding: '8px 15px', background: '#edf2f7', color: '#4a5568', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>
+                Clear Range
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {loading ? (
@@ -177,8 +269,8 @@ const Commissions = () => {
                 <TrendingUp size={24} />
               </div>
               <div className="card-info">
-                <span>Overall Commission (एकूण कमिशन)</span>
-                <h3>₹ {overallCommission.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
+                <span>{(startDate || endDate) ? 'Filtered Range Commission' : 'Overall Commission (एकूण कमिशन)'}</span>
+                <h3>₹ {((startDate || endDate) ? rangeCommissionSum : overallCommission).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
               </div>
             </div>
 

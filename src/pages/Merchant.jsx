@@ -10,7 +10,8 @@ import {
   FileText, 
   ChevronRight,
   UserPlus,
-  Trash2
+  Trash2,
+  Printer
 } from 'lucide-react';
 import './Merchant.css';
 
@@ -234,12 +235,48 @@ const Merchant = () => {
     }
   };
 
+  // Date Range State
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const formatDateDisplayLong = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  const clearDateRange = () => {
+    setStartDate('');
+    setEndDate('');
+  };
+
+  const filteredTransactions = (Array.isArray(transactions) ? transactions : []).filter(t => {
+    const tDate = t.date?.split('T')[0] || t.date;
+    if (startDate && tDate < startDate) return false;
+    if (endDate && tDate > endDate) return false;
+    return true;
+  });
+
+  const overallTotalGave = (Array.isArray(transactions) ? transactions : []).reduce((acc, txn) => txn.type === 'gave' ? acc + txn.amount : acc, 0);
+  const overallTotalGot = (Array.isArray(transactions) ? transactions : []).reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0);
+
+  const rangeTotalGave = filteredTransactions.reduce((acc, txn) => txn.type === 'gave' ? acc + txn.amount : acc, 0);
+  const rangeTotalGot = filteredTransactions.reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0);
+
   return (
     <div className="merchant-container">
-      <div className="merchant-tabs">
+      <div className="merchant-tabs hide-on-print">
         <button 
           className={`tab-btn ${activeTab === 'payment' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('payment'); setSelectedMerchant(null); }}
+          onClick={() => { setActiveTab('payment'); setSelectedMerchant(null); clearDateRange(); }}
         >
           Merchant Payment
         </button>
@@ -319,119 +356,186 @@ const Merchant = () => {
             exit={{ opacity: 0, scale: 1.05 }}
             className="account-view"
           >
-            <div className="account-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            {/* Print Header */}
+            <div className="print-only-header">
+              <div className="firm-identity">
+                <h1>Tanmay Traders</h1>
+                <p className="subtitle">Soybean, Cotton, Tur, & All grains commission agent</p>
+                <p className="location">Krushi Utpanna Bazar Samiti, Karanja (Lad) Dist. Washim | Mo: 9011874112</p>
+              </div>
+              <div className="print-report-title">
+                <h2>Merchant Account Ledger Statement</h2>
+                <p className="print-date">Merchant: <strong>{selectedMerchant.merchantName}</strong></p>
+                {selectedMerchant.contactNumber && <p className="print-date">Contact: {selectedMerchant.contactNumber}</p>}
+                <p className="print-date">
+                  Period: <strong>{startDate || endDate ? `${startDate ? formatDateDisplayLong(startDate) : 'Start'} to ${endDate ? formatDateDisplayLong(endDate) : 'End'}` : 'All Transactions'}</strong>
+                </p>
+                <p className="print-date" style={{ fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                  Printed on: {new Date().toLocaleDateString('en-GB')}
+                </p>
+              </div>
+            </div>
+
+            <div className="account-header hide-on-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <button className="back-btn" onClick={() => setSelectedMerchant(null)}>
+                <button className="back-btn" onClick={() => { setSelectedMerchant(null); clearDateRange(); }}>
                   <ArrowLeft size={24} />
                 </button>
                 <div className="account-title">
                   <h2>{selectedMerchant.merchantName}</h2>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }} className="hide-on-print">
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <button 
                   className="btn-gave"
                   onClick={() => { setTxnType('gave'); setShowTxnModal(true); }}
-                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontSize: '0.95rem', flex: 'none', width: 'auto' }}
+                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontSize: '0.95rem', width: 'auto' }}
                 >
-                  तुम्ही दिले ₹
+                  You Gave ₹
                 </button>
                 <button 
                   className="btn-got"
                   onClick={() => { setTxnType('got'); setShowTxnModal(true); }}
-                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontSize: '0.95rem', flex: 'none', width: 'auto' }}
+                  style={{ padding: '0.6rem 1.2rem', borderRadius: '8px', fontSize: '0.95rem', width: 'auto' }}
                 >
-                  तुम्हाला मिळाले ₹
+                  You Got ₹
+                </button>
+                <button 
+                  className="print-btn"
+                  onClick={() => window.print()}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', backgroundColor: '#0284c7', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.95rem' }}
+                >
+                  <Printer size={18} />
+                  <span>PDF / Print</span>
                 </button>
               </div>
             </div>
 
-            <div className="account-summary-three-col">
-              <div className="summary-item gave">
-                <div className="summary-label">तुम्ही दिले</div>
-                <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'gave' ? acc + txn.amount : acc, 0).toLocaleString()}</div>
+            {/* Date Range Selector Panel */}
+            <div className="date-range-panel hide-on-print" style={{ background: '#fcfcfd', border: '1px solid #eef0f2', borderRadius: '12px', padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', fontSize: '0.9rem', color: '#4a5568' }}>
+                <Calendar size={16} />
+                <span>Filter Transactions by Date Range</span>
               </div>
-              <div className="summary-item got">
-                <div className="summary-label">तुम्हाला मिळाले</div>
-                <div className="amount">₹{transactions.reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0).toLocaleString()}</div>
-              </div>
-              <div className={`summary-item net ${(selectedMerchant.balance || 0) >= 0 ? 'negative' : 'positive'}`}>
-                <div className="summary-label">Net Balance</div>
-                <div className="amount">
-                  ₹{Math.abs(selectedMerchant.balance || 0).toLocaleString()}
-                  <span className="balance-indicator">
-                    {(selectedMerchant.balance || 0) >= 0 ? ' (Get)' : ' (Give)'}
-                  </span>
+              <div className="inputs-row" style={{ display: 'flex', alignItems: 'flex-end', gap: '15px', flexWrap: 'wrap' }}>
+                <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: '1', minWidth: '150px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#718096', textTransform: 'uppercase' }}>Start Date</label>
+                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', fontSize: '0.9rem' }} />
+                </div>
+                <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: '1', minWidth: '150px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#718096', textTransform: 'uppercase' }}>End Date</label>
+                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', fontSize: '0.9rem' }} />
+                </div>
+                <div className="buttons-group">
+                  {(startDate || endDate) && (
+                    <button className="clear-btn" onClick={clearDateRange} style={{ padding: '8px 15px', background: '#edf2f7', color: '#4a5568', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>
+                      Clear Range
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="transaction-list">
-              <div className="txn-list-header">
-                <div className="header-info">Entries</div>
-                <div className="header-amount">तुम्ही दिले</div>
-                <div className="header-amount">तुम्हाला मिळाले</div>
-              </div>
-              {Object.keys(transactions
-                .filter(t => t.merchantId === selectedMerchant._id)
-                .reduce((groups, txn) => {
-                  const date = txn.date?.split('T')[0] || txn.date;
-                  if (!groups[date]) groups[date] = [];
-                  groups[date].push(txn);
-                  return groups;
-                }, {}))
-                .sort((a, b) => new Date(b) - new Date(a))
-                .map(date => (
-                  <div key={date} className="date-group">
-                    <div className="date-divider">
-                      <span>{formatDate(date)}</span>
-                    </div>
-                    {transactions
-                      .filter(t => t.merchantId === selectedMerchant._id && (t.date?.split('T')[0] || t.date) === date)
-                      .sort((a, b) => (b._id || b.id).localeCompare(a._id || a.id))
-                      .map(txn => (
-                        <div key={txn._id || txn.id} className="transaction-card-new">
-                          <div className="txn-info-col">
-                            <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
-                            <div className="txn-balance-chip">बॅलन्स ₹ {selectedMerchant.balance?.toLocaleString()}</div>
-                            <div className="txn-desc">{txn.description || (txn.type === 'gave' ? 'You Gave' : 'You Got')}</div>
-                            {txn.cropName && <div className="txn-crop-tag"><Tag size={10} /> {txn.cropName}</div>}
-                          </div>
-                          
-                          <div className={`txn-amount-col gave ${txn.type === 'gave' ? 'active' : ''}`}>
-                            {txn.type === 'gave' && `₹ ${txn.amount.toLocaleString()}`}
-                          </div>
-                          
-                          <div className={`txn-amount-col got ${txn.type === 'got' ? 'active' : ''}`}>
-                            {txn.type === 'got' && `₹ ${txn.amount.toLocaleString()}`}
-                            <button 
-                              className="delete-txn-btn-abs"
-                              onClick={() => deleteTransaction(txn._id || txn.id)}
-                              title="Delete"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                ))}
-            </div>
+            {(() => {
+              const showFiltered = startDate || endDate;
+              const activeTotalGave = showFiltered ? rangeTotalGave : overallTotalGave;
+              const activeTotalGot = showFiltered ? rangeTotalGot : overallTotalGot;
+              const activeNetVal = showFiltered ? (rangeTotalGave - rangeTotalGot) : (selectedMerchant.balance || 0);
 
-            <div className="account-footer">
-              <button 
-                className="btn-gave"
-                onClick={() => { setTxnType('gave'); setShowTxnModal(true); }}
-              >
-                तुम्ही दिले ₹
-              </button>
-              <button 
-                className="btn-got"
-                onClick={() => { setTxnType('got'); setShowTxnModal(true); }}
-              >
-                तुम्हाला मिळाले ₹
-              </button>
-            </div>
+              return (
+                <>
+                  <div className="account-summary-three-col">
+                    <div className="summary-item gave">
+                      <div className="summary-label">{showFiltered ? 'Range Total Gave' : 'Total Gave'}</div>
+                      <div className="amount">₹{activeTotalGave.toLocaleString()}</div>
+                    </div>
+                    <div className="summary-item got">
+                      <div className="summary-label">{showFiltered ? 'Range Total Got' : 'Total Got'}</div>
+                      <div className="amount">₹{activeTotalGot.toLocaleString()}</div>
+                    </div>
+                    <div className={`summary-item net ${activeNetVal >= 0 ? 'negative' : 'positive'}`}>
+                      <div className="summary-label">{showFiltered ? 'Range Net Balance' : 'Net Balance'}</div>
+                      <div className="amount">
+                        ₹{Math.abs(activeNetVal).toLocaleString()}
+                        <span className="balance-indicator">
+                          {activeNetVal >= 0 ? ' (Get)' : ' (Give)'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="transaction-list">
+                    <div className="txn-list-header">
+                      <div className="header-info">Entries ({filteredTransactions.length})</div>
+                      <div className="header-amount">You Gave</div>
+                      <div className="header-amount">You Got</div>
+                    </div>
+                    {filteredTransactions.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '30px', color: '#888' }}>No entries found in this period.</div>
+                    ) : (
+                      Object.keys(filteredTransactions
+                        .reduce((groups, txn) => {
+                          const date = txn.date?.split('T')[0] || txn.date;
+                          if (!groups[date]) groups[date] = [];
+                          groups[date].push(txn);
+                          return groups;
+                        }, {}))
+                        .sort((a, b) => new Date(b) - new Date(a))
+                        .map(date => (
+                          <div key={date} className="date-group">
+                            <div className="date-divider">
+                              <span>{formatDate(date)}</span>
+                            </div>
+                            {filteredTransactions
+                              .filter(t => (t.date?.split('T')[0] || t.date) === date)
+                              .sort((a, b) => (b._id || b.id).localeCompare(a._id || a.id))
+                              .map(txn => (
+                                <div key={txn._id || txn.id} className="transaction-card-new">
+                                  <div className="txn-info-col">
+                                    <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
+                                    <div className="txn-desc">{txn.description || (txn.type === 'gave' ? 'You Gave' : 'You Got')}</div>
+                                    {txn.cropName && <div className="txn-crop-tag"><Tag size={10} style={{ marginRight: '4px' }} /> {txn.cropName}</div>}
+                                    {txn.billNo && <div className="txn-bill-no" style={{ fontSize: '0.75rem', color: '#ef6c00', background: '#fff3e0', width: 'fit-content', padding: '1px 6px', borderRadius: '4px', fontWeight: '600', marginTop: '4px' }}>Bill No: {txn.billNo}</div>}
+                                  </div>
+                                  
+                                  <div className={`txn-amount-col gave ${txn.type === 'gave' ? 'active' : ''}`}>
+                                    {txn.type === 'gave' && `₹ ${txn.amount.toLocaleString()}`}
+                                  </div>
+                                  
+                                  <div className={`txn-amount-col got ${txn.type === 'got' ? 'active' : ''}`}>
+                                    {txn.type === 'got' && `₹ ${txn.amount.toLocaleString()}`}
+                                    <button 
+                                      className="delete-txn-btn-abs hide-on-print"
+                                      onClick={() => deleteTransaction(txn._id || txn.id)}
+                                      title="Delete"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        ))
+                    )}
+                  </div>
+
+                  <div className="account-footer hide-on-print">
+                    <button 
+                      className="btn-gave"
+                      onClick={() => { setTxnType('gave'); setShowTxnModal(true); }}
+                    >
+                      तुम्ही दिले ₹
+                    </button>
+                    <button 
+                      className="btn-got"
+                      onClick={() => { setTxnType('got'); setShowTxnModal(true); }}
+                    >
+                      तुम्हाला मिळाले ₹
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </motion.div>
         )}
 

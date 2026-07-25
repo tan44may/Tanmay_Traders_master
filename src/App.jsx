@@ -15,6 +15,7 @@ import DailyBalanceSheet from './pages/DailyBalanceSheet';
 import Commissions from './pages/Commissions';
 import Cashbook from './pages/Cashbook';
 import Employee from './pages/Employee';
+import OtherAccounts from './pages/OtherAccounts';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -54,7 +55,7 @@ const App = () => {
           <Route path="commissions" element={<Commissions />} />
           <Route path="cashbook" element={<Cashbook />} />
           <Route path="employee" element={<Employee />} />
-          <Route path="self" element={<div className="content-area"><h2>Self Section</h2></div>} />
+          <Route path="other-accounts" element={<OtherAccounts />} />
           <Route path="crop" element={<Crop />} />
         </Route>
 

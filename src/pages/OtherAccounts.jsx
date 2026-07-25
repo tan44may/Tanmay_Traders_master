@@ -6,7 +6,6 @@ import {
   ArrowLeft, 
   Calendar, 
   IndianRupee, 
-  Tag, 
   FileText, 
   ChevronRight,
   UserPlus,
@@ -15,32 +14,36 @@ import {
   Clock,
   Printer
 } from 'lucide-react';
-import './Customer.css';
+import './OtherAccounts.css';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000'
   : 'https://tanmay-traders.vercel.app';
 
-const Customer = () => {
+const OtherAccounts = () => {
   const [activeTab, setActiveTab] = useState('payment'); // 'payment' or 'add'
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedAccount, setSelectedAccount] = useState(null);
   const [showTxnModal, setShowTxnModal] = useState(false);
   const [txnType, setTxnType] = useState('gave'); // 'gave' or 'got'
 
-  const [customers, setCustomers] = useState([]);
+  const [otherAccounts, setOtherAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [ledger, setLedger] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Load customers on mount
+  // Date Range State
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  // Load other accounts on mount
   useEffect(() => {
-    fetchCustomers();
+    fetchOtherAccounts();
   }, []);
 
-  const fetchTransactions = async (customerId) => {
+  const fetchTransactions = async (otherAccountId) => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/customer-transactions/${customerId}`);
+      const response = await fetch(`${API_BASE_URL}/api/other-account-transactions/${otherAccountId}`);
       const data = await response.json();
       if (data?.success && data?.data) {
         setTransactions(data.data.transactions || []);
@@ -58,43 +61,46 @@ const Customer = () => {
     }
   };
 
-  const fetchCustomers = async () => {
+  const fetchOtherAccounts = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/customer`);
+      const response = await fetch(`${API_BASE_URL}/api/other-account`);
       const data = await response.json();
-      setCustomers(Array.isArray(data) ? data : (data?.data || []));
+      setOtherAccounts(Array.isArray(data) ? data : (data?.data || []));
     } catch (error) {
-      console.error("Error fetching customers:", error);
-      setCustomers([]);
+      console.error("Error fetching other accounts:", error);
+      setOtherAccounts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const overallOutstanding = Array.isArray(customers) 
-    ? customers.reduce((acc, c) => acc + (c.balance || 0), 0) 
+  const overallOutstanding = Array.isArray(otherAccounts) 
+    ? otherAccounts.reduce((acc, i) => acc + (i.balance || 0), 0) 
     : 0;
 
-  const handleAddCustomer = async (e) => {
+  const handleAddOtherAccount = async (e) => {
     e.preventDefault();
     const name = e.target.name.value;
     const phone = e.target.phone.value;
     
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/customer`, {
+      const response = await fetch(`${API_BASE_URL}/api/other-account`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerName: name, contactNumber: phone })
+        body: JSON.stringify({ otherAccountName: name, contactNumber: phone })
       });
       if (response.ok) {
-        fetchCustomers();
+        fetchOtherAccounts();
         setActiveTab('payment');
         e.target.reset();
+      } else {
+        const err = await response.json();
+        alert(err.message || "Failed to add account");
       }
     } catch (error) {
-      console.error("Error adding customer:", error);
+      console.error("Error adding other account:", error);
     } finally {
       setLoading(false);
     }
@@ -115,11 +121,11 @@ const Customer = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/customer-transactions`, {
+      const response = await fetch(`${API_BASE_URL}/api/other-account-transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerId: selectedCustomer._id,
+          otherAccountId: selectedAccount._id,
           type: txnType,
           amount,
           interestRate,
@@ -130,8 +136,8 @@ const Customer = () => {
       });
 
       if (response.ok) {
-        fetchTransactions(selectedCustomer._id);
-        fetchCustomers(); // Refresh balances
+        fetchTransactions(selectedAccount._id);
+        fetchOtherAccounts(); // Refresh balances
         setShowTxnModal(false);
       }
     } catch (error) {
@@ -141,30 +147,30 @@ const Customer = () => {
     }
   };
 
-  const deleteCustomer = async (e, id) => {
+  const deleteOtherAccount = async (e, id) => {
     e.stopPropagation();
-    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+    if (!window.confirm("Are you sure you want to delete this account and all its transactions?")) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/api/customer/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/other-account/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
-        fetchCustomers();
+        fetchOtherAccounts();
       }
     } catch (error) {
-      console.error("Error deleting customer:", error);
+      console.error("Error deleting other account:", error);
     }
   };
 
   const deleteTransaction = async (id) => {
     if (!window.confirm("Are you sure you want to delete this transaction?")) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/api/customer-transactions/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/other-account-transactions/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
-        fetchTransactions(selectedCustomer._id);
-        fetchCustomers(); // Refresh balance
+        fetchTransactions(selectedAccount._id);
+        fetchOtherAccounts(); // Refresh balance
       }
     } catch (error) {
       console.error("Error deleting transaction:", error);
@@ -172,7 +178,6 @@ const Customer = () => {
   };
 
   // Helper Functions
-
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     try {
@@ -181,6 +186,20 @@ const Customer = () => {
         day: '2-digit',
         month: 'short',
         year: '2-digit'
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
+  const formatDateDisplayLong = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
       });
     } catch (e) {
       return dateStr;
@@ -202,22 +221,24 @@ const Customer = () => {
     }
   };
 
-  // Date Range State
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // Filtered transactions based on Date Range
+  const filteredTransactions = transactions.filter(t => {
+    const tDate = t.date?.split('T')[0] || t.date;
+    if (startDate && tDate < startDate) return false;
+    if (endDate && tDate > endDate) return false;
+    return true;
+  });
 
-  const formatDateDisplayLong = (dateStr) => {
-    if (!dateStr) return '';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      });
-    } catch (e) {
-      return dateStr;
-    }
+  // Calculate totals for either the selected range or overall
+  const rangeTotalGave = filteredTransactions.reduce((acc, t) => t.type === 'gave' ? acc + t.amount : acc, 0);
+  const rangeTotalGot = filteredTransactions.reduce((acc, t) => t.type === 'got' ? acc + t.amount : acc, 0);
+  const rangeNetBalance = rangeTotalGave - rangeTotalGot;
+
+  const overallTotalGave = transactions.reduce((acc, t) => t.type === 'gave' ? acc + t.amount : acc, 0);
+  const overallTotalGot = transactions.reduce((acc, t) => t.type === 'got' ? acc + t.amount : acc, 0);
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const clearDateRange = () => {
@@ -225,38 +246,25 @@ const Customer = () => {
     setEndDate('');
   };
 
-  const filteredTransactions = (Array.isArray(transactions) ? transactions : []).filter(t => {
-    const tDate = t.date?.split('T')[0] || t.date;
-    if (startDate && tDate < startDate) return false;
-    if (endDate && tDate > endDate) return false;
-    return true;
-  });
-
-  const overallTotalGave = (Array.isArray(transactions) ? transactions : []).reduce((acc, txn) => txn.type === 'gave' ? acc + txn.amount : acc, 0);
-  const overallTotalGot = (Array.isArray(transactions) ? transactions : []).reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0);
-
-  const rangeTotalGave = filteredTransactions.reduce((acc, txn) => txn.type === 'gave' ? acc + txn.amount : acc, 0);
-  const rangeTotalGot = filteredTransactions.reduce((acc, txn) => txn.type === 'got' ? acc + txn.amount : acc, 0);
-
   return (
-    <div className="customer-container">
-      <div className="customer-tabs hide-on-print">
+    <div className="other-accounts-container">
+      <div className="other-accounts-tabs hide-on-print">
         <button 
           className={`tab-btn ${activeTab === 'payment' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('payment'); setSelectedCustomer(null); clearDateRange(); }}
+          onClick={() => { setActiveTab('payment'); setSelectedAccount(null); clearDateRange(); }}
         >
-          Customer Payment
+          Other Accounts
         </button>
         <button 
           className={`tab-btn ${activeTab === 'add' ? 'active' : ''}`}
           onClick={() => setActiveTab('add')}
         >
-          Add Customer
+          Add Account
         </button>
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'payment' && !selectedCustomer && (
+        {activeTab === 'payment' && !selectedAccount && (
           <motion.div 
             key="list"
             initial={{ opacity: 0, x: -20 }}
@@ -265,43 +273,43 @@ const Customer = () => {
           >
             <div className="overall-summary">
               <div className="summary-card">
-                <h4>Overall Outstanding</h4>
+                <h4>Overall Outstanding Balance</h4>
                 <div className={`amount ${overallOutstanding >= 0 ? 'negative' : 'positive'}`}>
                   ₹{Math.abs(overallOutstanding).toLocaleString()}
                   <span style={{ fontSize: '0.8rem', marginLeft: '5px' }}>
-                    {overallOutstanding >= 0 ? ' (You Get)' : ' (You Give)'}
+                    {overallOutstanding >= 0 ? ' (You Get)' : ' (You Give/Owe)'}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="customer-list">
-              {loading && customers.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>Loading customers...</div>
-              ) : customers.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No customers found. Add one to get started.</div>
+            <div className="other-accounts-list">
+              {loading && otherAccounts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>Loading accounts...</div>
+              ) : otherAccounts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No accounts found. Add one to get started.</div>
               ) : (
-                customers.map(customer => (
+                otherAccounts.map(account => (
                   <div 
-                    key={customer._id} 
-                    className="customer-item"
+                    key={account._id} 
+                    className="other-accounts-item"
                     onClick={() => {
-                      setSelectedCustomer(customer);
-                      fetchTransactions(customer._id);
+                      setSelectedAccount(account);
+                      fetchTransactions(account._id);
                     }}
                   >
-                    <div className="customer-info">
-                      <h3>{customer.customerName}</h3>
-                      <p>{customer.contactNumber || 'No contact'}</p>
+                    <div className="other-accounts-info">
+                      <h3>{account.otherAccountName}</h3>
+                      <p>{account.contactNumber || 'No contact'}</p>
                     </div>
-                    <div className="customer-balance">
-                      <span className="balance-label">{(customer.balance || 0) >= 0 ? 'You Get' : 'You Give'}</span>
-                      <span className={`amount ${(customer.balance || 0) >= 0 ? 'negative' : 'positive'}`}>
-                        ₹{Math.abs(customer.balance || 0).toLocaleString()}
+                    <div className="other-accounts-balance">
+                      <span className="balance-label">{(account.balance || 0) >= 0 ? 'You Get' : 'You Give'}</span>
+                      <span className={`amount ${(account.balance || 0) >= 0 ? 'negative' : 'positive'}`}>
+                        ₹{Math.abs(account.balance || 0).toLocaleString()}
                       </span>
                       <button 
-                        className="delete-customer-btn"
-                        onClick={(e) => deleteCustomer(e, customer._id)}
+                        className="delete-other-accounts-btn"
+                        onClick={(e) => deleteOtherAccount(e, account._id)}
                         style={{ marginLeft: '15px', color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                       >
                         <Trash2 size={16} />
@@ -315,7 +323,7 @@ const Customer = () => {
           </motion.div>
         )}
 
-        {selectedCustomer && activeTab === 'payment' && (
+        {selectedAccount && activeTab === 'payment' && (
           <motion.div 
             key="account"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -323,7 +331,7 @@ const Customer = () => {
             exit={{ opacity: 0, scale: 1.05 }}
             className="account-view"
           >
-            {/* Print Only Header */}
+            {/* Print Header */}
             <div className="print-only-header">
               <div className="firm-identity">
                 <h1>Tanmay Traders</h1>
@@ -331,9 +339,9 @@ const Customer = () => {
                 <p className="location">Krushi Utpanna Bazar Samiti, Karanja (Lad) Dist. Washim | Mo: 9011874112</p>
               </div>
               <div className="print-report-title">
-                <h2>Customer Account Ledger Statement</h2>
-                <p className="print-date">Customer: <strong>{selectedCustomer.customerName}</strong></p>
-                {selectedCustomer.contactNumber && <p className="print-date">Contact: {selectedCustomer.contactNumber}</p>}
+                <h2>Other Account Ledger Statement</h2>
+                <p className="print-date">Account: <strong>{selectedAccount.otherAccountName}</strong></p>
+                {selectedAccount.contactNumber && <p className="print-date">Contact: {selectedAccount.contactNumber}</p>}
                 <p className="print-date">
                   Period: <strong>{startDate || endDate ? `${startDate ? formatDateDisplayLong(startDate) : 'Start'} to ${endDate ? formatDateDisplayLong(endDate) : 'End'}` : 'All Transactions'}</strong>
                 </p>
@@ -345,11 +353,11 @@ const Customer = () => {
 
             <div className="account-header hide-on-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <button className="back-btn" onClick={() => { setSelectedCustomer(null); clearDateRange(); }}>
+                <button className="back-btn" onClick={() => { setSelectedAccount(null); clearDateRange(); }}>
                   <ArrowLeft size={24} />
                 </button>
                 <div className="account-title">
-                  <h2>{selectedCustomer.customerName}</h2>
+                  <h2>{selectedAccount.otherAccountName}</h2>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -369,7 +377,7 @@ const Customer = () => {
                 </button>
                 <button 
                   className="print-btn"
-                  onClick={() => window.print()}
+                  onClick={handlePrint}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', backgroundColor: '#0284c7', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '0.95rem' }}
                 >
                   <Printer size={18} />
@@ -379,23 +387,23 @@ const Customer = () => {
             </div>
 
             {/* Date Range Selector Panel */}
-            <div className="date-range-panel hide-on-print" style={{ background: '#fcfcfd', border: '1px solid #eef0f2', borderRadius: '12px', padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', fontSize: '0.9rem', color: '#4a5568' }}>
+            <div className="date-range-panel hide-on-print">
+              <div className="panel-title">
                 <Calendar size={16} />
                 <span>Filter Transactions by Date Range</span>
               </div>
-              <div className="inputs-row" style={{ display: 'flex', alignItems: 'flex-end', gap: '15px', flexWrap: 'wrap' }}>
-                <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: '1', minWidth: '150px' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#718096', textTransform: 'uppercase' }}>Start Date</label>
-                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', fontSize: '0.9rem' }} />
+              <div className="inputs-row">
+                <div className="input-group">
+                  <label>Start Date</label>
+                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                 </div>
-                <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: '1', minWidth: '150px' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#718096', textTransform: 'uppercase' }}>End Date</label>
-                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', fontSize: '0.9rem' }} />
+                <div className="input-group">
+                  <label>End Date</label>
+                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                 </div>
                 <div className="buttons-group">
                   {(startDate || endDate) && (
-                    <button className="clear-btn" onClick={clearDateRange} style={{ padding: '8px 15px', background: '#edf2f7', color: '#4a5568', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>
+                    <button className="clear-btn" onClick={clearDateRange}>
                       Clear Range
                     </button>
                   )}
@@ -407,7 +415,8 @@ const Customer = () => {
               const showFiltered = startDate || endDate;
               const activeTotalGave = showFiltered ? rangeTotalGave : overallTotalGave;
               const activeTotalGot = showFiltered ? rangeTotalGot : overallTotalGot;
-              const activeNetVal = showFiltered ? (rangeTotalGave - rangeTotalGot) : (ledger ? ledger.netBalance : (selectedCustomer.balance || 0));
+              const activeNetVal = showFiltered ? rangeNetBalance : (ledger ? ledger.netBalance : (selectedAccount.balance || 0));
+              
               return (
                 <>
                   <div className="account-summary-three-col">
@@ -457,46 +466,44 @@ const Customer = () => {
                                 </div>
                                 {filteredTransactions
                                   .filter(t => (t.date?.split('T')[0] || t.date) === date)
-                                  .map(txn => {
-                                    return (
-                                      <div 
-                                        key={txn._id} 
-                                        className="transaction-card-new simple-entry"
-                                      >
-                                        <div className="txn-info-col">
-                                          <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
-                                          <div className="txn-desc">
-                                            {txn.description || (txn.type === 'gave' ? 'You Gave' : 'You Got')}
+                                  .map(txn => (
+                                    <div 
+                                      key={txn._id} 
+                                      className="transaction-card-new simple-entry"
+                                    >
+                                      <div className="txn-info-col">
+                                        <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
+                                        <div className="txn-desc">
+                                          {txn.description || (txn.type === 'gave' ? 'You Gave' : 'You Got')}
+                                        </div>
+                                        {txn.type === 'gave' && txn.interestRate > 0 && (
+                                          <div className="txn-rate-badge">
+                                            <Percent size={10} style={{ marginRight: '2px' }} />
+                                            {txn.interestRate}% Interest
                                           </div>
-                                          {txn.type === 'gave' && txn.interestRate > 0 && (
-                                            <div className="txn-rate-badge">
-                                              <Percent size={10} style={{ marginRight: '2px' }} />
-                                              {txn.interestRate}% Interest
-                                            </div>
-                                          )}
-                                          {txn.billNo && (
-                                            <div className="txn-bill-no">
-                                              Bill No: {txn.billNo}
-                                            </div>
-                                          )}
-                                        </div>
-                                        
-                                        <div className={`txn-amount-col gave ${txn.type === 'gave' ? 'active' : ''}`}>
-                                          {txn.type === 'gave' && `₹ ${txn.amount.toLocaleString()}`}
-                                        </div>
-                                        
-                                        <div className={`txn-amount-col got ${txn.type === 'got' ? 'active' : ''}`}>
-                                          {txn.type === 'got' && `₹ ${txn.amount.toLocaleString()}`}
-                                          <button 
-                                            className="delete-txn-btn-abs hide-on-print"
-                                            onClick={(e) => { e.stopPropagation(); deleteTransaction(txn._id); }}
-                                          >
-                                            <Trash2 size={14} />
-                                          </button>
-                                        </div>
+                                        )}
+                                        {txn.billNo && (
+                                          <div className="txn-bill-no">
+                                            Bill No: {txn.billNo}
+                                          </div>
+                                        )}
                                       </div>
-                                    );
-                                  })}
+                                      
+                                      <div className={`txn-amount-col gave ${txn.type === 'gave' ? 'active' : ''}`}>
+                                        {txn.type === 'gave' && `₹ ${txn.amount.toLocaleString()}`}
+                                      </div>
+                                      
+                                      <div className={`txn-amount-col got ${txn.type === 'got' ? 'active' : ''}`}>
+                                        {txn.type === 'got' && `₹ ${txn.amount.toLocaleString()}`}
+                                        <button 
+                                          className="delete-txn-btn-abs hide-on-print"
+                                          onClick={(e) => { e.stopPropagation(); deleteTransaction(txn._id); }}
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
                               </div>
                             ))
                         )}
@@ -561,12 +568,12 @@ const Customer = () => {
                               {ledger?.prepayment > 0 ? (
                                 <>
                                   <h4>Prepayment Credit Balance</h4>
-                                  <p className="prepayment-text">The customer has a prepayment credit of <strong style={{color: '#2e7d32'}}>₹{ledger.prepayment.toLocaleString()}</strong>.</p>
+                                  <p className="prepayment-text">The account has a prepayment credit of <strong style={{color: '#2e7d32'}}>₹{ledger.prepayment.toLocaleString()}</strong>.</p>
                                 </>
                               ) : (
                                 <>
                                   <h4>No Active Loans</h4>
-                                  <p>No outstanding amounts. All loans have been fully paid off.</p>
+                                  <p>No outstanding amounts. All active loans have been fully paid off.</p>
                                 </>
                               )}
                             </div>
@@ -590,9 +597,9 @@ const Customer = () => {
                           )}
                           <div className="summary-row final-total">
                             <span>Net Outstanding:</span>
-                            <span className={`net-outstanding-amount ${netVal >= 0 ? 'negative' : 'positive'}`}>
-                              ₹{Math.abs(netVal).toLocaleString()}
-                              <small>{netVal >= 0 ? ' (Get)' : ' (Give)'}</small>
+                            <span className={`net-outstanding-amount ${activeNetVal >= 0 ? 'negative' : 'positive'}`}>
+                              ₹{Math.abs(activeNetVal).toLocaleString()}
+                              <small>{activeNetVal >= 0 ? ' (Get)' : ' (Give)'}</small>
                             </span>
                           </div>
                         </div>
@@ -600,7 +607,17 @@ const Customer = () => {
                     </div>
                   </div>
 
-                  <div className="account-footer">
+                  {/* Signature block for physical bills printouts */}
+                  <div className="print-only-signatures" style={{ display: 'none', marginTop: '3.5rem', justifyContent: 'space-between', padding: '0 2rem' }}>
+                    <div style={{ textAlign: 'center', borderTop: '1px solid #333', width: '200px', paddingTop: '0.5rem' }}>
+                      <span>Prepared By</span>
+                    </div>
+                    <div style={{ textAlign: 'center', borderTop: '1px solid #333', width: '200px', paddingTop: '0.5rem' }}>
+                      <span>Authorized Signature</span>
+                    </div>
+                  </div>
+
+                  <div className="account-footer hide-on-print">
                     <button 
                       className="btn-gave"
                       onClick={() => { setTxnType('gave'); setShowTxnModal(true); }}
@@ -626,18 +643,18 @@ const Customer = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="add-customer-container"
+            className="add-other-accounts-container"
           >
             <div style={{ textAlign: 'center', marginBottom: '30px' }}>
               <div style={{ background: '#f3e5f5', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px' }}>
                 <UserPlus size={30} color="#512da8" />
               </div>
-              <h2>Add New Customer</h2>
-              <p style={{ color: '#888' }}>Enter customer details to start tracking loans</p>
+              <h2>Add New Account</h2>
+              <p style={{ color: '#888' }}>Enter account details to start tracking payments</p>
             </div>
-            <form onSubmit={handleAddCustomer}>
+            <form onSubmit={handleAddOtherAccount}>
               <div className="form-group">
-                <label>Customer Name *</label>
+                <label>Account Name *</label>
                 <input type="text" name="name" placeholder="Enter name" required />
               </div>
               <div className="form-group">
@@ -645,7 +662,7 @@ const Customer = () => {
                 <input type="tel" name="phone" placeholder="Enter mobile number" />
               </div>
               <button type="submit" className="submit-btn" disabled={loading}>
-                {loading ? 'Adding...' : 'Add Customer'}
+                {loading ? 'Adding...' : 'Add Account'}
               </button>
             </form>
           </motion.div>
@@ -654,7 +671,7 @@ const Customer = () => {
 
       {/* Transaction Modal */}
       {showTxnModal && (
-        <div className="modal-overlay">
+        <div className="modal-overlay hide-on-print">
           <div className="modal-content">
             <div className={`modal-header ${txnType}`}>
               <h3>Add Entry: {txnType === 'gave' ? 'You Gave' : 'You Got'}</h3>
@@ -694,4 +711,4 @@ const Customer = () => {
   );
 };
 
-export default Customer;
+export default OtherAccounts;

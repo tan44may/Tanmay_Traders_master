@@ -26,6 +26,10 @@ const Bank = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Date Range State
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
   // Transaction Modal State
   const [showTxnModal, setShowTxnModal] = useState(false);
   const [txnType, setTxnType] = useState('credit'); // 'credit' (deposit) or 'debit' (withdrawal)
@@ -462,15 +466,18 @@ const Bank = () => {
                   {selectedAccount.accountNumber ? ` | A/C: ${selectedAccount.accountNumber}` : ''}
                   {selectedAccount.ifscCode ? ` | IFSC: ${selectedAccount.ifscCode}` : ''}
                 </p>
+                <p className="print-date">
+                  Period: <strong>{startDate || endDate ? `${startDate ? formatDate(startDate) : 'Start'} to ${endDate ? formatDate(endDate) : 'End'}` : 'All Transactions'}</strong>
+                </p>
                 <p className="print-date" style={{ fontSize: '0.9rem', marginTop: '0.25rem' }}>
                   Printed on: {new Date().toLocaleDateString('en-GB')}
                 </p>
               </div>
             </div>
 
-            <div className="account-header hide-on-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '2rem' }}>
+            <div className="account-header hide-on-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <button className="back-btn" onClick={() => setSelectedAccount(null)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <button className="back-btn" onClick={() => { setSelectedAccount(null); setStartDate(''); setEndDate(''); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <ArrowLeft size={24} />
                 </button>
                 <div className="account-title">
@@ -481,7 +488,7 @@ const Bank = () => {
                   </span>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                 <button
                   className="btn-got"
                   onClick={() => { setTxnType('credit'); setTransactionType('cash'); setShowTxnModal(true); }}
@@ -538,101 +545,153 @@ const Bank = () => {
                   }}
                 >
                   <Printer size={18} />
-                  <span>Print Ledger</span>
+                  <span>PDF / Print</span>
                 </button>
               </div>
             </div>
 
-            <div className="account-summary-three-col">
-              <div className="summary-item got">
-                <div className="summary-label">Total Deposit / जमा</div>
-                <div className="amount">
-                  ₹{transactions.reduce((acc, txn) => txn.type === 'credit' ? acc + txn.amount : acc, 0).toLocaleString()}
-                </div>
+            {/* Date Range Selector Panel */}
+            <div className="date-range-panel hide-on-print" style={{ background: '#fcfcfd', border: '1px solid #eef0f2', borderRadius: '12px', padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '1.5rem' }}>
+              <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', fontSize: '0.9rem', color: '#4a5568' }}>
+                <Calendar size={16} />
+                <span>Filter Transactions by Date Range</span>
               </div>
-              <div className="summary-item gave">
-                <div className="summary-label">Total Withdraw / नावे</div>
-                <div className="amount">
-                  ₹{transactions.reduce((acc, txn) => txn.type === 'debit' ? acc + txn.amount : acc, 0).toLocaleString()}
+              <div className="inputs-row" style={{ display: 'flex', alignItems: 'flex-end', gap: '15px', flexWrap: 'wrap' }}>
+                <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: '1', minWidth: '150px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#718096', textTransform: 'uppercase' }}>Start Date</label>
+                  <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', fontSize: '0.9rem' }} />
                 </div>
-              </div>
-              <div className={`summary-item net ${(selectedAccount.balance || 0) >= 0 ? 'positive' : 'negative'}`}>
-                <div className="summary-label">Current Balance</div>
-                <div className="amount">
-                  ₹{(selectedAccount.balance || 0).toLocaleString()}
+                <div className="input-group" style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: '1', minWidth: '150px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: '700', color: '#718096', textTransform: 'uppercase' }}>End Date</label>
+                  <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={{ padding: '8px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', fontSize: '0.9rem' }} />
+                </div>
+                <div className="buttons-group">
+                  {(startDate || endDate) && (
+                    <button className="clear-btn" onClick={() => { setStartDate(''); setEndDate(''); }} style={{ padding: '8px 15px', background: '#edf2f7', color: '#4a5568', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>
+                      Clear Range
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="transaction-list">
-              <div className="txn-list-header">
-                <div className="header-info">Transactions</div>
-                <div className="header-amount text-red">Withdraw (नावे)</div>
-                <div className="header-amount text-green">Deposit (जमा)</div>
-                <div className="header-amount text-blue" style={{ color: '#1976d2' }}>Balance (शिल्लक)</div>
-              </div>
-              {Object.keys(transactions
-                .filter(t => t.bankAccountId === selectedAccount._id)
-                .reduce((groups, txn) => {
-                  const date = txn.date?.split('T')[0] || txn.date;
-                  if (!groups[date]) groups[date] = [];
-                  groups[date].push(txn);
-                  return groups;
-                }, {}))
-                .sort((a, b) => new Date(b) - new Date(a))
-                .map(date => (
-                  <div key={date} className="date-group">
-                    <div className="date-divider">
-                      <span>{formatDate(date)}</span>
+            {(() => {
+              const showFiltered = startDate || endDate;
+              const filteredTxns = accountTxns.filter(t => {
+                const tDate = t.date?.split('T')[0] || t.date;
+                if (startDate && tDate < startDate) return false;
+                if (endDate && tDate > endDate) return false;
+                return true;
+              });
+
+              const rangeDeposit = filteredTxns.filter(t => t.type === 'credit').reduce((acc, t) => acc + t.amount, 0);
+              const rangeWithdraw = filteredTxns.filter(t => t.type === 'debit').reduce((acc, t) => acc + t.amount, 0);
+              
+              const totalDeposit = accountTxns.filter(t => t.type === 'credit').reduce((acc, t) => acc + t.amount, 0);
+              const totalWithdraw = accountTxns.filter(t => t.type === 'debit').reduce((acc, t) => acc + t.amount, 0);
+
+              const activeDeposit = showFiltered ? rangeDeposit : totalDeposit;
+              const activeWithdraw = showFiltered ? rangeWithdraw : totalWithdraw;
+              const activeBalance = showFiltered ? (rangeDeposit - rangeWithdraw) : (selectedAccount.balance || 0);
+
+              return (
+                <>
+                  <div className="account-summary-three-col">
+                    <div className="summary-item got">
+                      <div className="summary-label">{showFiltered ? 'Range Total Deposit' : 'Total Deposit / जमा'}</div>
+                      <div className="amount">
+                        ₹{activeDeposit.toLocaleString()}
+                      </div>
                     </div>
-                    {transactions
-                      .filter(t => t.bankAccountId === selectedAccount._id && (t.date?.split('T')[0] || t.date) === date)
-                      .sort((a, b) => (b._id || b.id).localeCompare(a._id || a.id))
-                      .map(txn => (
-                        <div key={txn._id || txn.id} className="transaction-card-new">
-                          <div className="txn-info-col">
-                            <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
-                            <div className="txn-desc">{getTxnDescription(txn)}</div>
-                          </div>
-
-                          <div className={`txn-amount-col gave ${txn.type === 'debit' ? 'active' : ''}`}>
-                            {txn.type === 'debit' && `₹ ${txn.amount.toLocaleString()}`}
-                          </div>
-
-                          <div className={`txn-amount-col got ${txn.type === 'credit' ? 'active' : ''}`}>
-                            {txn.type === 'credit' && `₹ ${txn.amount.toLocaleString()}`}
-                          </div>
-
-                          <div className="txn-amount-col" style={{ color: '#1976d2', fontWeight: '600' }}>
-                            ₹ {txnRunningBalances[txn._id || txn.id]?.toLocaleString()}
-                            <button
-                              className="delete-txn-btn-abs"
-                              onClick={() => deleteTransaction(txn._id || txn.id)}
-                              title="Delete"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="summary-item gave">
+                      <div className="summary-label">{showFiltered ? 'Range Total Withdraw' : 'Total Withdraw / नावे'}</div>
+                      <div className="amount">
+                        ₹{activeWithdraw.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className={`summary-item net ${activeBalance >= 0 ? 'positive' : 'negative'}`}>
+                      <div className="summary-label">{showFiltered ? 'Range Balance' : 'Current Balance'}</div>
+                      <div className="amount">
+                        ₹{activeBalance.toLocaleString()}
+                      </div>
+                    </div>
                   </div>
-                ))}
-            </div>
 
-            <div className="account-footer hide-on-print">
-              <button
-                className="btn-got"
-                onClick={() => { setTxnType('credit'); setTransactionType('cash'); setShowTxnModal(true); }}
-              >
-                Deposit / जमा ₹
-              </button>
-              <button
-                className="btn-gave"
-                onClick={() => { setTxnType('debit'); setTransactionType('self'); setShowTxnModal(true); }}
-              >
-                Withdraw / नावे ₹
-              </button>
-            </div>
+                  <div className="transaction-list">
+                    <div className="txn-list-header">
+                      <div className="header-info">Transactions ({filteredTxns.length})</div>
+                      <div className="header-amount text-red">Withdraw (नावे)</div>
+                      <div className="header-amount text-green">Deposit (जमा)</div>
+                      <div className="header-amount text-blue" style={{ color: '#1976d2' }}>Balance (शिल्लक)</div>
+                    </div>
+                    {filteredTxns.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '30px', color: '#888' }}>No transactions found in this period.</div>
+                    ) : (
+                      Object.keys(filteredTxns
+                        .reduce((groups, txn) => {
+                          const date = txn.date?.split('T')[0] || txn.date;
+                          if (!groups[date]) groups[date] = [];
+                          groups[date].push(txn);
+                          return groups;
+                        }, {}))
+                        .sort((a, b) => new Date(b) - new Date(a))
+                        .map(date => (
+                          <div key={date} className="date-group">
+                            <div className="date-divider">
+                              <span>{formatDate(date)}</span>
+                            </div>
+                            {filteredTxns
+                              .filter(t => (t.date?.split('T')[0] || t.date) === date)
+                              .sort((a, b) => (b._id || b.id).localeCompare(a._id || a.id))
+                              .map(txn => (
+                                <div key={txn._id || txn.id} className="transaction-card-new">
+                                  <div className="txn-info-col">
+                                    <div className="txn-time">{formatTime(txn.date, txn.createdAt)}</div>
+                                    <div className="txn-desc">{getTxnDescription(txn)}</div>
+                                  </div>
+
+                                  <div className={`txn-amount-col gave ${txn.type === 'debit' ? 'active' : ''}`}>
+                                    {txn.type === 'debit' && `₹ ${txn.amount.toLocaleString()}`}
+                                  </div>
+
+                                  <div className={`txn-amount-col got ${txn.type === 'credit' ? 'active' : ''}`}>
+                                    {txn.type === 'credit' && `₹ ${txn.amount.toLocaleString()}`}
+                                  </div>
+
+                                  <div className="txn-amount-col" style={{ color: '#1976d2', fontWeight: '600' }}>
+                                    ₹ {txnRunningBalances[txn._id || txn.id]?.toLocaleString()}
+                                    <button
+                                      className="delete-txn-btn-abs hide-on-print"
+                                      onClick={() => deleteTransaction(txn._id || txn.id)}
+                                      title="Delete"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        ))
+                    )}
+                  </div>
+
+                  <div className="account-footer hide-on-print">
+                    <button
+                      className="btn-got"
+                      onClick={() => { setTxnType('credit'); setTransactionType('cash'); setShowTxnModal(true); }}
+                    >
+                      Deposit / जमा ₹
+                    </button>
+                    <button
+                      className="btn-gave"
+                      onClick={() => { setTxnType('debit'); setTransactionType('self'); setShowTxnModal(true); }}
+                    >
+                      Withdraw / नावे ₹
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </motion.div>
         )}
 
@@ -777,6 +836,7 @@ const Bank = () => {
                           <option value="CANARA BANK">CANARA BANK</option>
                           <option value="NISHANT MULTISTATE">NISHANT MULTISTATE</option>
                           <option value="CENTRAL BANK">CENTRAL BANK</option>
+                          
                         </select>
                       </div>
                     </>

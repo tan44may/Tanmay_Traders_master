@@ -27,7 +27,7 @@ const menuItems = [
   { name: 'Commissions', path: '/commissions', icon: Briefcase },
   { name: 'Cashbook', path: '/cashbook', icon: Wallet },
   { name: 'Employee', path: '/employee', icon: UserCheck },
-  { name: 'Self', path: '/self', icon: UserSquare2 },
+  { name: 'Other Accounts', path: '/other-accounts', icon: UserSquare2 },
   { name: 'Crop', path: '/crop', icon: Leaf }
 ];
 
