@@ -590,9 +590,9 @@ const Customer = () => {
                           )}
                           <div className="summary-row final-total">
                             <span>Net Outstanding:</span>
-                            <span className={`net-outstanding-amount ${netVal >= 0 ? 'negative' : 'positive'}`}>
-                              ₹{Math.abs(netVal).toLocaleString()}
-                              <small>{netVal >= 0 ? ' (Get)' : ' (Give)'}</small>
+                            <span className={`net-outstanding-amount ${activeNetVal >= 0 ? 'negative' : 'positive'}`}>
+                              ₹{Math.abs(activeNetVal).toLocaleString()}
+                              <small>{activeNetVal >= 0 ? ' (Get)' : ' (Give)'}</small>
                             </span>
                           </div>
                         </div>
