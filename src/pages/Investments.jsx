@@ -23,11 +23,6 @@ const Investments = () => {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   
-  // Local Popup alert states
-  const [maturityAlertsList, setMaturityAlertsList] = useState([]);
-  const [showAlertPopup, setShowAlertPopup] = useState(false);
-  const [hasCheckedAlerts, setHasCheckedAlerts] = useState(false);
-
   // Form states
   const [accountNumber, setAccountNumber] = useState('');
   const [investAmount, setInvestAmount] = useState('');
@@ -45,38 +40,12 @@ const Investments = () => {
       const data = await response.json();
       if (data.success) {
         setInvestments(data.data || []);
-        
-        // Trigger checking for tomorrow maturities on load
-        if (!hasCheckedAlerts && data.data) {
-          checkMaturityAlerts(data.data);
-        }
       }
     } catch (error) {
       console.error('Error fetching investments:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const checkMaturityAlerts = (items) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    // Filter items maturing tomorrow (using date comparison in local time)
-    const tomorrowMaturities = items.filter(item => {
-      const mDate = new Date(item.maturityDate);
-      mDate.setHours(0, 0, 0, 0);
-      return mDate.getTime() === tomorrow.getTime();
-    });
-
-    if (tomorrowMaturities.length > 0) {
-      setMaturityAlertsList(tomorrowMaturities);
-      setShowAlertPopup(true);
-    }
-    setHasCheckedAlerts(true);
   };
 
   const handleAddInvestment = async (e) => {
@@ -105,19 +74,6 @@ const Investments = () => {
         setInvestments(updatedList);
         setShowModal(false);
         resetForm();
-        
-        // Re-evaluate alert list if a tomorrow maturity is added
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(today.getDate() + 1);
-        const addedMaturityDate = new Date(data.data.maturityDate);
-        addedMaturityDate.setHours(0, 0, 0, 0);
-
-        if (addedMaturityDate.getTime() === tomorrow.getTime()) {
-          setMaturityAlertsList(prev => [...prev, data.data]);
-          setShowAlertPopup(true);
-        }
       } else {
         alert(data.message || 'Failed to add investment.');
       }
@@ -140,7 +96,6 @@ const Investments = () => {
       const data = await response.json();
       if (data.success) {
         setInvestments(investments.filter(item => item._id !== id));
-        setMaturityAlertsList(maturityAlertsList.filter(item => item._id !== id));
       } else {
         alert(data.message || 'Failed to delete investment.');
       }
@@ -438,71 +393,7 @@ const Investments = () => {
         </div>
       )}
 
-      {/* In-App Maturity Alert Popup Modal */}
-      {showAlertPopup && (
-        <div className="modal-overlay alert-modal-overlay">
-          <motion.div 
-            className="modal-container glass-panel alert-modal-container"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-          >
-            <div className="modal-header alert-modal-header">
-              <h3 className="flex-row-gap alert-title">
-                <AlertTriangle size={24} className="text-warning-red" /> Maturity Alert!
-              </h3>
-              <button className="close-modal" onClick={() => setShowAlertPopup(false)}>&times;</button>
-            </div>
-            
-            <div className="alert-modal-body">
-              <p className="alert-modal-intro">
-                The following investment accounts are maturing <strong>tomorrow</strong>. Please take note:
-              </p>
-              <div className="alert-items-list">
-                {maturityAlertsList.map((item) => (
-                  <div key={item._id} className="alert-item-card">
-                    <div className="alert-item-head">
-                      <span className={`alert-badge-type ${item.investmentType.toLowerCase()}`}>
-                        {item.investmentType}
-                      </span>
-                      <span className="alert-acc-no">A/C: {item.accountNumber}</span>
-                    </div>
-                    <div className="alert-item-body">
-                      <div>
-                        <span className="lbl">Monthly/Invested:</span>
-                        <span className="val">₹{item.investAmount.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div>
-                        <span className="lbl">Maturity Value:</span>
-                        <span className="val text-green-bold">₹{item.maturityAmount.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div>
-                        <span className="lbl">Maturity Date:</span>
-                        <span className="val">
-                          {new Date(item.maturityDate).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="modal-footer">
-              <button 
-                type="button" 
-                className="save-btn close-alert-btn" 
-                onClick={() => setShowAlertPopup(false)}
-              >
-                Acknowledge & Close
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+
     </div>
   );
 };
