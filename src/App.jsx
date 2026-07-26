@@ -16,6 +16,7 @@ import Commissions from './pages/Commissions';
 import Cashbook from './pages/Cashbook';
 import Employee from './pages/Employee';
 import OtherAccounts from './pages/OtherAccounts';
+import Investments from './pages/Investments';
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +57,7 @@ const App = () => {
           <Route path="cashbook" element={<Cashbook />} />
           <Route path="employee" element={<Employee />} />
           <Route path="other-accounts" element={<OtherAccounts />} />
+          <Route path="investments" element={<Investments />} />
           <Route path="crop" element={<Crop />} />
         </Route>
 
