@@ -7,8 +7,6 @@ import {
   Calendar, 
   IndianRupee, 
   Clock, 
-  Send,
-  CheckCircle2,
   AlertTriangle,
   FolderDot,
   Calculator
@@ -24,7 +22,11 @@ const Investments = () => {
   const [investments, setInvestments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [checkingMaturity, setCheckingMaturity] = useState(false);
+  
+  // Local Popup alert states
+  const [maturityAlertsList, setMaturityAlertsList] = useState([]);
+  const [showAlertPopup, setShowAlertPopup] = useState(false);
+  const [hasCheckedAlerts, setHasCheckedAlerts] = useState(false);
 
   // Form states
   const [accountNumber, setAccountNumber] = useState('');
@@ -43,12 +45,38 @@ const Investments = () => {
       const data = await response.json();
       if (data.success) {
         setInvestments(data.data || []);
+        
+        // Trigger checking for tomorrow maturities on load
+        if (!hasCheckedAlerts && data.data) {
+          checkMaturityAlerts(data.data);
+        }
       }
     } catch (error) {
       console.error('Error fetching investments:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const checkMaturityAlerts = (items) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    // Filter items maturing tomorrow (using date comparison in local time)
+    const tomorrowMaturities = items.filter(item => {
+      const mDate = new Date(item.maturityDate);
+      mDate.setHours(0, 0, 0, 0);
+      return mDate.getTime() === tomorrow.getTime();
+    });
+
+    if (tomorrowMaturities.length > 0) {
+      setMaturityAlertsList(tomorrowMaturities);
+      setShowAlertPopup(true);
+    }
+    setHasCheckedAlerts(true);
   };
 
   const handleAddInvestment = async (e) => {
@@ -73,9 +101,23 @@ const Investments = () => {
       });
       const data = await response.json();
       if (data.success) {
-        setInvestments([...investments, data.data].sort((a, b) => new Date(a.maturityDate) - new Date(b.maturityDate)));
+        const updatedList = [...investments, data.data].sort((a, b) => new Date(a.maturityDate) - new Date(b.maturityDate));
+        setInvestments(updatedList);
         setShowModal(false);
         resetForm();
+        
+        // Re-evaluate alert list if a tomorrow maturity is added
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        const addedMaturityDate = new Date(data.data.maturityDate);
+        addedMaturityDate.setHours(0, 0, 0, 0);
+
+        if (addedMaturityDate.getTime() === tomorrow.getTime()) {
+          setMaturityAlertsList(prev => [...prev, data.data]);
+          setShowAlertPopup(true);
+        }
       } else {
         alert(data.message || 'Failed to add investment.');
       }
@@ -98,6 +140,7 @@ const Investments = () => {
       const data = await response.json();
       if (data.success) {
         setInvestments(investments.filter(item => item._id !== id));
+        setMaturityAlertsList(maturityAlertsList.filter(item => item._id !== id));
       } else {
         alert(data.message || 'Failed to delete investment.');
       }
@@ -106,26 +149,6 @@ const Investments = () => {
       alert('Error deleting investment.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const triggerMaturityCheck = async () => {
-    try {
-      setCheckingMaturity(true);
-      const response = await fetch(`${API_BASE_URL}/api/investments/check-maturity`);
-      const data = await response.json();
-      if (data.success) {
-        alert(data.message);
-        // Refresh investments to update "alertSent" status if applicable
-        fetchInvestments();
-      } else {
-        alert(data.message || 'Failed to trigger maturity notification check.');
-      }
-    } catch (error) {
-      console.error('Error triggering maturity check:', error);
-      alert('Error connecting to backend for maturity check.');
-    } finally {
-      setCheckingMaturity(false);
     }
   };
 
@@ -192,15 +215,6 @@ const Investments = () => {
           <p className="subtitle">Manage Recurring Deposits (RD) and Fixed Deposits (FD) portfolios</p>
         </div>
         <div className="header-actions">
-          <button 
-            className="check-notify-btn" 
-            onClick={triggerMaturityCheck} 
-            disabled={checkingMaturity}
-            title="Check and dispatch pending maturity WhatsApp alerts"
-          >
-            <Send size={16} />
-            <span>{checkingMaturity ? 'Checking...' : 'Check Maturity & Send Alerts'}</span>
-          </button>
           <button className="add-investment-trigger-btn" onClick={() => { resetForm(); setShowModal(true); }}>
             <Plus size={18} />
             <span>Add New {activeTab}</span>
@@ -284,7 +298,6 @@ const Investments = () => {
                   <th>Maturity Amount</th>
                   <th>Maturity Date</th>
                   <th>Status</th>
-                  <th>WhatsApp Alert</th>
                   <th style={{ textAlign: 'center' }}>Actions</th>
                 </tr>
               </thead>
@@ -324,19 +337,6 @@ const Investments = () => {
                         </span>
                       </td>
                       <td>{getStatusBadge(item)}</td>
-                      <td>
-                        {item.alertSent ? (
-                          <span className="alert-badge sent">
-                            <CheckCircle2 size={12} style={{ marginRight: '4px' }} />
-                            Sent
-                          </span>
-                        ) : (
-                          <span className="alert-badge pending">
-                            <Clock size={12} style={{ marginRight: '4px' }} />
-                            Pending
-                          </span>
-                        )}
-                      </td>
                       <td style={{ textAlign: 'center' }}>
                         <button 
                           className="delete-btn"
@@ -434,6 +434,72 @@ const Investments = () => {
                 </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* In-App Maturity Alert Popup Modal */}
+      {showAlertPopup && (
+        <div className="modal-overlay alert-modal-overlay">
+          <motion.div 
+            className="modal-container glass-panel alert-modal-container"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+          >
+            <div className="modal-header alert-modal-header">
+              <h3 className="flex-row-gap alert-title">
+                <AlertTriangle size={24} className="text-warning-red" /> Maturity Alert!
+              </h3>
+              <button className="close-modal" onClick={() => setShowAlertPopup(false)}>&times;</button>
+            </div>
+            
+            <div className="alert-modal-body">
+              <p className="alert-modal-intro">
+                The following investment accounts are maturing <strong>tomorrow</strong>. Please take note:
+              </p>
+              <div className="alert-items-list">
+                {maturityAlertsList.map((item) => (
+                  <div key={item._id} className="alert-item-card">
+                    <div className="alert-item-head">
+                      <span className={`alert-badge-type ${item.investmentType.toLowerCase()}`}>
+                        {item.investmentType}
+                      </span>
+                      <span className="alert-acc-no">A/C: {item.accountNumber}</span>
+                    </div>
+                    <div className="alert-item-body">
+                      <div>
+                        <span className="lbl">Monthly/Invested:</span>
+                        <span className="val">₹{item.investAmount.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div>
+                        <span className="lbl">Maturity Value:</span>
+                        <span className="val text-green-bold">₹{item.maturityAmount.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div>
+                        <span className="lbl">Maturity Date:</span>
+                        <span className="val">
+                          {new Date(item.maturityDate).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="save-btn close-alert-btn" 
+                onClick={() => setShowAlertPopup(false)}
+              >
+                Acknowledge & Close
+              </button>
+            </div>
           </motion.div>
         </div>
       )}
