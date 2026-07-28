@@ -13,12 +13,14 @@ import {
   UserSquare2,
   Leaf,
   ClipboardList,
-  TrendingUp
+  TrendingUp,
+  LayoutDashboard
 } from 'lucide-react';
 import './Sidebar.css';
 
 const menuItems = [
   { name: 'Home', path: '/home', icon: UserCircle },
+  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { name: 'Patti', path: '/patti', icon: FileText },
   { name: 'Bill', path: '/bill', icon: Receipt },
   { name: 'Merchant', path: '/merchant', icon: Users },
