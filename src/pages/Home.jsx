@@ -29,7 +29,7 @@ const StatCard = ({ title, value, icon: Icon, delay, subText }) => (
 const Home = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [mascotState, setMascotState] = useState('walk-in'); // 'walk-in', 'greet', 'walk-off', 'done'
+  const [mascotState, setMascotState] = useState('done'); // 'walk-in', 'greet', 'walk-off', 'done' (Disabled by user request)
 
   // Fetch Dashboard Stats
   useEffect(() => {
