@@ -201,6 +201,17 @@ const Bank = () => {
         payload.selectedBank = selectedBank;
       } else if (transactionType === 'imps') {
         payload.description = txnDescription;
+      } else if (transactionType === 'cheque') {
+        if (!selectedCustomerName) {
+          alert('Please select a customer');
+          return;
+        }
+        const customerObj = customers.find(c => c.customerName === selectedCustomerName);
+        if (!customerObj) {
+          alert('Selected customer not found');
+          return;
+        }
+        payload.customerId = customerObj._id;
       }
     } else {
       payload.transactionType = transactionType;
@@ -788,6 +799,7 @@ const Bank = () => {
                         setSelectedMerchantName('');
                         setSelectedBank('');
                         setTxnDescription('');
+                        setSelectedCustomerName('');
                       }}
                       className="form-select-new"
                       required
@@ -795,6 +807,7 @@ const Bank = () => {
                       <option value="cash">Cash</option>
                       <option value="merchant payment">Merchant Payment</option>
                       <option value="imps">IMPS</option>
+                      <option value="cheque">Cheque</option>
                     </select>
                   </div>
 
@@ -855,6 +868,18 @@ const Bank = () => {
                           required
                         />
                       </div>
+                    </div>
+                  )}
+
+                  {transactionType === 'cheque' && (
+                    <div className="form-group dropdown-field-wrapper">
+                      <SearchableDropdown
+                        label="Customer Name *"
+                        options={customers.map(c => c.customerName)}
+                        value={selectedCustomerName}
+                        onChange={(val) => setSelectedCustomerName(val)}
+                        placeholder="Search or Select Customer..."
+                      />
                     </div>
                   )}
                 </>

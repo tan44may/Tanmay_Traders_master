@@ -234,12 +234,23 @@ const DailyBalanceSheet = () => {
   const formatDateReadable = (dateStr) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-IN', {
-      weekday: 'long',
+    const weekdaysEng = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const weekdayTranslations = {
+      'Sunday': 'रविवार',
+      'Monday': 'सोमवार',
+      'Tuesday': 'मंगळवार',
+      'Wednesday': 'बुधवार',
+      'Thursday': 'गुरुवार',
+      'Friday': 'शुक्रवार',
+      'Saturday': 'शनिवार'
+    };
+    const dayName = weekdayTranslations[weekdaysEng[date.getDay()]] || weekdaysEng[date.getDay()];
+    const dateFormatted = date.toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
+    return `${dayName}, ${dateFormatted}`;
   };
 
   // Total Calculations (for cards)
