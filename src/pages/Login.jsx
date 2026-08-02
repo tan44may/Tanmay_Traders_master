@@ -4,18 +4,36 @@ import { useNavigate } from 'react-router-dom';
 import { Leaf, Lock, User, Wheat } from 'lucide-react';
 import './Login.css';
 
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:5000'
+  : 'https://tanmay-traders.vercel.app';
+
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (username === 'tanmay' && password === '9011874112') {
-      navigate('/home');
-    } else {
-      setError('Invalid username or password');
+    setError('');
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await response.json();
+      if (data.success) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.user.username);
+        navigate('/home');
+      } else {
+        setError(data.message || 'Invalid username or password');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Connection error. Please check if backend is running.');
     }
   };
 

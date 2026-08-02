@@ -226,6 +226,8 @@ const Bank = () => {
           return;
         }
         payload.customerId = customerObj._id;
+      } else if (transactionType === 'interest' || transactionType === 'charges' || transactionType === 'imps') {
+        payload.description = txnDescription;
       }
     }
 
@@ -352,7 +354,13 @@ const Bank = () => {
       return 'RTGS';
     }
     if (txn.transactionType === 'imps' || txn.transactionType === 'IMPS') {
-      return 'IMPS';
+      return txn.description ? `IMPS: ${txn.description}` : 'IMPS';
+    }
+    if (txn.transactionType === 'interest' || txn.transactionType === 'intrest' || txn.transactionType === 'INTEREST' || txn.transactionType === 'INTREST') {
+      return txn.description ? `Interest: ${txn.description}` : 'Interest (व्याज)';
+    }
+    if (txn.transactionType === 'charges' || txn.transactionType === 'CHARGES') {
+      return txn.description ? `Charges: ${txn.description}` : 'Charges (चार्जेस)';
     }
     return txn.description || (txn.type === 'credit' ? 'Deposit' : 'Withdrawal');
   };
@@ -892,6 +900,7 @@ const Bank = () => {
                       onChange={(e) => {
                         setTransactionType(e.target.value);
                         setSelectedCustomerName('');
+                        setTxnDescription('');
                       }}
                       className="form-select-new"
                       required
@@ -899,6 +908,9 @@ const Bank = () => {
                       <option value="self">Self</option>
                       <option value="cheque">Cheque</option>
                       <option value="rtgs">RTGS</option>
+                      <option value="interest">Interest (व्याज)</option>
+                      <option value="charges">Charges (चार्जेस)</option>
+                      <option value="imps">IMPS</option>
                     </select>
                   </div>
 
@@ -911,6 +923,21 @@ const Bank = () => {
                         onChange={(val) => setSelectedCustomerName(val)}
                         placeholder="Search or Select Customer..."
                       />
+                    </div>
+                  )}
+
+                  {(transactionType === 'interest' || transactionType === 'charges' || transactionType === 'imps') && (
+                    <div className="form-group">
+                      <label>Description / Remarks</label>
+                      <div className="input-with-icon">
+                        <FileText size={18} />
+                        <input
+                          type="text"
+                          value={txnDescription}
+                          onChange={(e) => setTxnDescription(e.target.value)}
+                          placeholder={`Enter ${transactionType} description`}
+                        />
+                      </div>
                     </div>
                   )}
                 </>

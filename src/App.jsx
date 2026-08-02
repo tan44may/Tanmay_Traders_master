@@ -18,6 +18,22 @@ import Employee from './pages/Employee';
 import OtherAccounts from './pages/OtherAccounts';
 import Investments from './pages/Investments';
 
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+const PublicRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    return <Navigate to="/home" replace />;
+  }
+  return children;
+};
+
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -42,9 +58,9 @@ const App = () => {
             )
           } 
         />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         
-        <Route path="/" element={<Layout />}>
+        <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
           <Route path="home" element={<Home />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="patti" element={<Patti />} />

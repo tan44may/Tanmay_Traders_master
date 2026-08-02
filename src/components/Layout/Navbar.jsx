@@ -6,10 +6,12 @@ import './Navbar.css';
 
 const Navbar = ({ toggleSidebar }) => {
   const navigate = useNavigate();
+  const username = localStorage.getItem('username') || 'Tanmay';
 
   const handleSignOut = () => {
-    // In a real app, clear tokens here
-    navigate('/');
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    navigate('/login');
   };
 
   return (
@@ -49,7 +51,7 @@ const Navbar = ({ toggleSidebar }) => {
           <div className="avatar">
             <User size={20} color="white" />
           </div>
-          <span className="username">Tanmay</span>
+          <span className="username" style={{ textTransform: 'capitalize' }}>{username}</span>
         </div>
 
         <motion.button 
