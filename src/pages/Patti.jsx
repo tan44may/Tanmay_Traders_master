@@ -194,10 +194,14 @@ const Patti = () => {
         setRecords([data.data, ...records]);
         if (print) {
           setPrintData(data.data);
+          const handleAfterPrint = () => {
+            setPrintData(null);
+            window.removeEventListener('afterprint', handleAfterPrint);
+          };
+          window.addEventListener('afterprint', handleAfterPrint);
           setTimeout(() => {
             window.print();
-            setPrintData(null);
-          }, 150);
+          }, 300);
         }
         
         setFormData({
@@ -388,10 +392,14 @@ const Patti = () => {
             </button>
             <button className="save-print-btn" onClick={() => {
               setPrintData(viewingRecord);
+              const handleAfterPrint = () => {
+                setPrintData(null);
+                window.removeEventListener('afterprint', handleAfterPrint);
+              };
+              window.addEventListener('afterprint', handleAfterPrint);
               setTimeout(() => {
                 window.print();
-                setPrintData(null);
-              }, 150);
+              }, 300);
             }}>
               <Printer size={18} />
               <span>Print</span>

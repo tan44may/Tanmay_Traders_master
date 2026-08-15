@@ -11,7 +11,8 @@ import {
   ChevronRight,
   UserPlus,
   Trash2,
-  Printer
+  Printer,
+  Search
 } from 'lucide-react';
 import './Merchant.css';
 
@@ -28,6 +29,9 @@ const Merchant = () => {
   const [merchants, setMerchants] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('highAmount'); // 'highAmount', 'name', 'recent'
 
   // Load merchants on mount
   useEffect(() => {
@@ -276,7 +280,7 @@ const Merchant = () => {
       <div className="merchant-tabs hide-on-print">
         <button 
           className={`tab-btn ${activeTab === 'payment' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('payment'); setSelectedMerchant(null); clearDateRange(); }}
+          onClick={() => { setActiveTab('payment'); setSelectedMerchant(null); clearDateRange(); setSearchTerm(''); }}
         >
           Merchant Payment
         </button>
@@ -308,43 +312,91 @@ const Merchant = () => {
               </div>
             </div>
 
-            <div className="merchant-list">
-              {loading && merchants.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>Loading merchants...</div>
-              ) : merchants.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No merchants found. Add one to get started.</div>
-              ) : (
-                merchants.map(merchant => (
-                  <div 
-                    key={merchant._id} 
-                    className="merchant-item"
-                    onClick={() => {
-                      setSelectedMerchant(merchant);
-                      fetchTransactions(merchant._id);
-                    }}
-                  >
-                    <div className="merchant-info">
-                      <h3>{merchant.merchantName}</h3>
-                      <p>{merchant.contactNumber || 'No contact'}</p>
-                    </div>
-                    <div className="merchant-balance">
-                      <span className="balance-label">{(merchant.balance || 0) >= 0 ? 'You Get' : 'You Give'}</span>
-                      <span className={`amount ${(merchant.balance || 0) >= 0 ? 'negative' : 'positive'}`}>
-                        ₹{Math.abs(merchant.balance || 0).toLocaleString()}
-                      </span>
-                      <button 
-                        className="delete-merchant-btn"
-                        onClick={(e) => deleteMerchant(e, merchant._id)}
-                        style={{ marginLeft: '15px', color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                      <ChevronRight size={18} style={{ marginLeft: '10px', color: '#ccc' }} />
-                    </div>
-                  </div>
-                ))
-              )}
+            {/* Search and Sort Bar */}
+            <div className="search-sort-bar hide-on-print">
+              <div className="search-input-wrapper">
+                <Search size={18} className="search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="Search merchant by name or phone..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="sort-select-wrapper">
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="highAmount">Sort: High Outstanding</option>
+                  <option value="name">Sort: Name (A-Z)</option>
+                  <option value="recent">Sort: Recently Added</option>
+                </select>
+              </div>
             </div>
+
+            {(() => {
+              const processedMerchants = [...merchants]
+                .filter(m => {
+                  const term = searchTerm.toLowerCase().trim();
+                  if (!term) return true;
+                  return (m.merchantName?.toLowerCase().includes(term) || 
+                          m.contactNumber?.toLowerCase().includes(term));
+                })
+                .sort((a, b) => {
+                  if (sortBy === 'highAmount') {
+                    const balA = Math.abs(a.balance || 0);
+                    const balB = Math.abs(b.balance || 0);
+                    return balB - balA;
+                  }
+                  if (sortBy === 'name') {
+                    return (a.merchantName || '').localeCompare(b.merchantName || '');
+                  }
+                  return 0; // keeps original order
+                });
+
+              return (
+                <div className="merchant-list">
+                  {loading && merchants.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>Loading merchants...</div>
+                  ) : merchants.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No merchants found. Add one to get started.</div>
+                  ) : processedMerchants.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No matching merchants found.</div>
+                  ) : (
+                    processedMerchants.map(merchant => (
+                      <div 
+                        key={merchant._id} 
+                        className="merchant-item"
+                        onClick={() => {
+                          setSelectedMerchant(merchant);
+                          fetchTransactions(merchant._id);
+                        }}
+                      >
+                        <div className="merchant-info">
+                          <h3>{merchant.merchantName}</h3>
+                          <p>{merchant.contactNumber || 'No contact'}</p>
+                        </div>
+                        <div className="merchant-balance">
+                          <span className="balance-label">{(merchant.balance || 0) >= 0 ? 'You Get' : 'You Give'}</span>
+                          <span className={`amount ${(merchant.balance || 0) >= 0 ? 'negative' : 'positive'}`}>
+                            ₹{Math.abs(merchant.balance || 0).toLocaleString()}
+                          </span>
+                          <button 
+                            className="delete-merchant-btn"
+                            onClick={(e) => deleteMerchant(e, merchant._id)}
+                            style={{ marginLeft: '15px', color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          <ChevronRight size={18} style={{ marginLeft: '10px', color: '#ccc' }} />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              );
+            })()}
           </motion.div>
         )}
 

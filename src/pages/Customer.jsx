@@ -13,7 +13,8 @@ import {
   Trash2,
   Percent,
   Clock,
-  Printer
+  Printer,
+  Search
 } from 'lucide-react';
 import './Customer.css';
 
@@ -31,6 +32,9 @@ const Customer = () => {
   const [transactions, setTransactions] = useState([]);
   const [ledger, setLedger] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('highAmount'); // 'highAmount', 'name', 'recent'
 
   // Load customers on mount
   useEffect(() => {
@@ -243,7 +247,7 @@ const Customer = () => {
       <div className="customer-tabs hide-on-print">
         <button 
           className={`tab-btn ${activeTab === 'payment' ? 'active' : ''}`}
-          onClick={() => { setActiveTab('payment'); setSelectedCustomer(null); clearDateRange(); }}
+          onClick={() => { setActiveTab('payment'); setSelectedCustomer(null); clearDateRange(); setSearchTerm(''); }}
         >
           Customer Payment
         </button>
@@ -275,43 +279,91 @@ const Customer = () => {
               </div>
             </div>
 
-            <div className="customer-list">
-              {loading && customers.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>Loading customers...</div>
-              ) : customers.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No customers found. Add one to get started.</div>
-              ) : (
-                customers.map(customer => (
-                  <div 
-                    key={customer._id} 
-                    className="customer-item"
-                    onClick={() => {
-                      setSelectedCustomer(customer);
-                      fetchTransactions(customer._id);
-                    }}
-                  >
-                    <div className="customer-info">
-                      <h3>{customer.customerName}</h3>
-                      <p>{customer.contactNumber || 'No contact'}</p>
-                    </div>
-                    <div className="customer-balance">
-                      <span className="balance-label">{(customer.balance || 0) >= 0 ? 'You Get' : 'You Give'}</span>
-                      <span className={`amount ${(customer.balance || 0) >= 0 ? 'negative' : 'positive'}`}>
-                        ₹{Math.abs(customer.balance || 0).toLocaleString()}
-                      </span>
-                      <button 
-                        className="delete-customer-btn"
-                        onClick={(e) => deleteCustomer(e, customer._id)}
-                        style={{ marginLeft: '15px', color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                      <ChevronRight size={18} style={{ marginLeft: '10px', color: '#ccc' }} />
-                    </div>
-                  </div>
-                ))
-              )}
+            {/* Search and Sort Bar */}
+            <div className="search-sort-bar hide-on-print">
+              <div className="search-input-wrapper">
+                <Search size={18} className="search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="Search customer by name or phone..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="sort-select-wrapper">
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value)}
+                >
+                  <option value="highAmount">Sort: High Outstanding</option>
+                  <option value="name">Sort: Name (A-Z)</option>
+                  <option value="recent">Sort: Recently Added</option>
+                </select>
+              </div>
             </div>
+
+            {(() => {
+              const processedCustomers = [...customers]
+                .filter(c => {
+                  const term = searchTerm.toLowerCase().trim();
+                  if (!term) return true;
+                  return (c.customerName?.toLowerCase().includes(term) || 
+                          c.contactNumber?.toLowerCase().includes(term));
+                })
+                .sort((a, b) => {
+                  if (sortBy === 'highAmount') {
+                    const balA = Math.abs(a.balance || 0);
+                    const balB = Math.abs(b.balance || 0);
+                    return balB - balA;
+                  }
+                  if (sortBy === 'name') {
+                    return (a.customerName || '').localeCompare(b.customerName || '');
+                  }
+                  return 0; // keeps original order
+                });
+
+              return (
+                <div className="customer-list">
+                  {loading && customers.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>Loading customers...</div>
+                  ) : customers.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No customers found. Add one to get started.</div>
+                  ) : processedCustomers.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No matching customers found.</div>
+                  ) : (
+                    processedCustomers.map(customer => (
+                      <div 
+                        key={customer._id} 
+                        className="customer-item"
+                        onClick={() => {
+                          setSelectedCustomer(customer);
+                          fetchTransactions(customer._id);
+                        }}
+                      >
+                        <div className="customer-info">
+                          <h3>{customer.customerName}</h3>
+                          <p>{customer.contactNumber || 'No contact'}</p>
+                        </div>
+                        <div className="customer-balance">
+                          <span className="balance-label">{(customer.balance || 0) >= 0 ? 'You Get' : 'You Give'}</span>
+                          <span className={`amount ${(customer.balance || 0) >= 0 ? 'negative' : 'positive'}`}>
+                            ₹{Math.abs(customer.balance || 0).toLocaleString()}
+                          </span>
+                          <button 
+                            className="delete-customer-btn"
+                            onClick={(e) => deleteCustomer(e, customer._id)}
+                            style={{ marginLeft: '15px', color: '#ff4d4d', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          <ChevronRight size={18} style={{ marginLeft: '10px', color: '#ccc' }} />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              );
+            })()}
           </motion.div>
         )}
 
