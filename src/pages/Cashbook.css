@@ -646,3 +646,671 @@
     gap: 1.5rem;
   }
 }
+
+/* ==========================================================================
+   NOTE DENOMINATION CALCULATOR & BALANCE VERIFICATION STYLES
+   ========================================================================== */
+
+/* Summary Match Indicator Pill */
+.summary-match-pill-btn {
+  margin-top: 0.75rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.summary-pill.pill-matched {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.summary-pill.pill-unmatched {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.summary-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Note Calculator Main Section */
+.note-calculator-section {
+  background: white;
+  border-radius: 18px;
+  padding: 2rem;
+  margin-top: 2rem;
+  border: 1px solid var(--border-light, #e5e7eb);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+.note-calc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1.5px solid #f1f5f9;
+  margin-bottom: 1.75rem;
+}
+
+.note-calc-title-box {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.note-calc-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.note-calc-title-box h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.note-calc-title-box .subtitle {
+  margin: 0.15rem 0 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.note-calc-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-secondary-calc {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary-calc:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.btn-primary-calc {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-primary-calc:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(16, 185, 129, 0.35);
+}
+
+.btn-primary-calc:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Denomination Grid */
+.denom-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .denom-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .denom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.denom-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  gap: 0.5rem;
+}
+
+.denom-card:hover, .denom-card:focus-within {
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+  transform: translateY(-1px);
+}
+
+.denom-card.has-value {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.denom-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 95px;
+}
+
+.denom-pill {
+  padding: 0.35rem 0.65rem;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  display: inline-block;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.denom-type-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.4px;
+}
+
+.denom-multiply-symbol {
+  font-weight: 700;
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+.denom-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.denom-input {
+  width: 85px;
+  padding: 0.45rem 0.5rem;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: white;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.denom-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  background: #fff;
+}
+
+/* Chrome, Safari, Edge, Opera number arrows remove */
+.denom-input::-webkit-outer-spin-button,
+.denom-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.denom-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.denom-equals-symbol {
+  font-weight: 700;
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+.denom-subtotal {
+  min-width: 95px;
+  text-align: right;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.denom-subtotal.highlighted {
+  color: #059669;
+}
+
+/* Calculation Overview Bar */
+.note-calc-metrics-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: white;
+  padding: 1.25rem 1.75rem;
+  border-radius: 14px;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.15);
+}
+
+.metric-chunk {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-chunk .chunk-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.2rem;
+}
+
+.metric-chunk .chunk-val {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: white;
+}
+
+.metric-chunk .chunk-val.accent-green {
+  color: #34d399;
+}
+
+.metric-chunk .chunk-val.accent-orange {
+  color: #fb923c;
+}
+
+/* Comparison & Centered Match / Unmatch Indicator */
+.balance-matching-banner-section {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-top: 1.5rem;
+}
+
+.comparison-flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.comparison-card {
+  flex: 1;
+  min-width: 260px;
+  max-width: 380px;
+  padding: 1.5rem 1.75rem;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+
+.comparison-card.lhs {
+  background: white;
+  border: 1.5px solid #cbd5e1;
+}
+
+.comparison-card.rhs {
+  background: white;
+  border: 1.5px solid #86efac;
+}
+
+.comparison-card .label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.comparison-card .value {
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.comparison-card .sub-calc {
+  margin-top: 0.5rem;
+  font-size: 1.3rem;
+  color: #0f172a;
+}
+
+.comparison-card .sub-calc strong {
+  font-size: 1.45rem;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.comparison-vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #94a3b8;
+  padding: 0 0.5rem;
+}
+
+/* Centered Popping Status Card */
+.match-status-center-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: 2rem auto 0.5rem auto;
+  max-width: 620px;
+  padding: 2.25rem 2rem;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+  width: 100%;
+}
+
+.match-status-center-card.matched {
+  background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+  border: 2px dashed #319795;
+  color: #234e52;
+}
+
+.match-status-center-card.unmatched {
+  background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+  border: 2px dashed #e53e3e;
+  color: #742a2a;
+}
+
+.status-circle-wrapper {
+  margin-bottom: 1.25rem;
+}
+
+.status-info-centered .status-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem 0;
+}
+
+.status-info-centered .status-desc {
+  font-size: 0.95rem;
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.5;
+  color: inherit;
+}
+
+/* SVG Animations for Checkmark & Crossmark */
+.checkmark-svg {
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 4;
+  stroke: #2e7d32;
+  stroke-miterlimit: 10;
+  box-shadow: inset 0px 0px 0px #e6fffa;
+  margin: 0 auto;
+}
+
+.checkmark-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 4;
+  stroke-miterlimit: 10;
+  stroke: #319795;
+  fill: none;
+  animation: draw-circle 3s ease-in-out infinite;
+}
+
+.checkmark-check {
+  transform-origin: 50% 50%;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke: #319795;
+  animation: draw-check 3s ease-in-out infinite;
+}
+
+.crossmark-svg {
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  display: block;
+  stroke-width: 4;
+  stroke: #e53e3e;
+  stroke-miterlimit: 10;
+  box-shadow: inset 0px 0px 0px #fff5f5;
+  margin: 0 auto;
+}
+
+.crossmark-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  stroke-width: 4;
+  stroke-miterlimit: 10;
+  stroke: #e53e3e;
+  fill: none;
+  animation: draw-circle 3s ease-in-out infinite;
+}
+
+.crossmark-line1, .crossmark-line2 {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  stroke: #e53e3e;
+}
+
+.crossmark-line1 {
+  animation: draw-check 3s ease-in-out infinite;
+}
+
+.crossmark-line2 {
+  animation: draw-check 3s ease-in-out infinite 0.2s;
+}
+
+@keyframes draw-circle {
+  0%, 100% {
+    stroke-dashoffset: 166;
+  }
+  40%, 60% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes draw-check {
+  0%, 100% {
+    stroke-dashoffset: 48;
+  }
+  40%, 60% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Footer Section: Remarks & Status feedback */
+.note-calc-footer {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1.5px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.remarks-input-wrapper {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.remarks-input {
+  width: 100%;
+  padding: 0.55rem 0.95rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.remarks-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.save-status-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.save-success-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  background-color: #dcfce7;
+  color: #15803d;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid #bbf7d0;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Print Only Denomination Slip */
+.print-denomination-slip {
+  display: none;
+}
+
+@media print {
+  .note-calculator-section {
+    display: none !important; /* Hide interactive card in print */
+  }
+
+  .print-denomination-slip {
+    display: block !important;
+    margin-top: 2rem;
+    page-break-inside: avoid;
+    border: 1.5px solid #333;
+    border-radius: 6px;
+    padding: 1rem;
+    font-family: inherit;
+  }
+
+  .print-denom-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1.5px solid #333;
+    padding-bottom: 0.4rem;
+  }
+
+  .print-denom-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+  }
+
+  .print-denom-table th,
+  .print-denom-table td {
+    border: 1px solid #777;
+    padding: 5px 8px;
+    font-size: 0.85rem;
+  }
+
+  .print-denom-table th {
+    background-color: #eee !important;
+    font-weight: 700;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-denom-footer-row {
+    font-weight: 800;
+    background-color: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-reconciliation-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1.5px dashed #333;
+    padding-top: 0.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .print-stamp-box {
+    border: 1px solid #999;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+}
+

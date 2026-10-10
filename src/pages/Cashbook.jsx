@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Calendar, 
@@ -13,13 +13,47 @@ import {
   Check, 
   AlertCircle,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Calculator,
+  Coins,
+  Banknote,
+  RotateCcw,
+  Save,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import './Cashbook.css';
 
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000'
   : 'https://tanmay-traders.vercel.app';
+
+// Denominations from 1 to 500
+const DENOMINATIONS = [500, 200, 100, 50, 20, 10, 5, 2, 1];
+
+const DENOM_CONFIG = {
+  500: { label: '₹ 500', type: 'Note', color: '#334155', bg: '#f1f5f9', border: '#cbd5e1' },
+  200: { label: '₹ 200', type: 'Note', color: '#c2410c', bg: '#ffedd5', border: '#fed7aa' },
+  100: { label: '₹ 100', type: 'Note', color: '#7e22ce', bg: '#f3e8ff', border: '#e9d5ff' },
+  50:  { label: '₹ 50',  type: 'Note', color: '#0f766e', bg: '#ccfbf1', border: '#99f6e4' },
+  20:  { label: '₹ 20',  type: 'Note', color: '#15803d', bg: '#dcfce7', border: '#bbf7d0' },
+  10:  { label: '₹ 10',  type: 'Note / Coin', color: '#9a3412', bg: '#ffedd5', border: '#fdba74' },
+  5:   { label: '₹ 5',   type: 'Note / Coin', color: '#166534', bg: '#f0fdf4', border: '#86efac' },
+  2:   { label: '₹ 2',   type: 'Coin / Note', color: '#475569', bg: '#f8fafc', border: '#e2e8f0' },
+  1:   { label: '₹ 1',   type: 'Coin / Note', color: '#854d0e', bg: '#fef9c3', border: '#fef08a' }
+};
+
+const emptyDenominations = {
+  '500': '',
+  '200': '',
+  '100': '',
+  '50': '',
+  '20': '',
+  '10': '',
+  '5': '',
+  '2': '',
+  '1': ''
+};
 
 const Cashbook = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -65,6 +99,14 @@ const Cashbook = () => {
     rdDeposits: false
   });
 
+  // Note calculator state
+  const [denominationCounts, setDenominationCounts] = useState(emptyDenominations);
+  const [denominationRemarks, setDenominationRemarks] = useState('');
+  const [isSavingDenomination, setIsSavingDenomination] = useState(false);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+  const [savedAt, setSavedAt] = useState(null);
+  const calculatorRef = useRef(null);
+
   const toggleExpand = (section) => {
     setExpandedSection(prev => ({ ...prev, [section]: !prev[section] }));
   };
@@ -76,9 +118,56 @@ const Cashbook = () => {
       const result = await response.json();
       if (result.success && result.data) {
         setData(result.data);
+
+        // Load saved denomination for this date if present
+        if (result.data.denomination && result.data.denomination.counts) {
+          const loaded = {};
+          DENOMINATIONS.forEach(d => {
+            const val = result.data.denomination.counts[d];
+            loaded[d] = (val !== undefined && val !== null && val > 0) ? String(val) : '';
+          });
+          setDenominationCounts(loaded);
+          setDenominationRemarks(result.data.denomination.remarks || '');
+          setSavedAt(result.data.denomination.updatedAt || result.data.denomination.createdAt || new Date().toISOString());
+        } else {
+          // Check local storage fallback
+          const localSaved = localStorage.getItem(`tanmay_denom_${selectedDate}`);
+          if (localSaved) {
+            try {
+              const parsed = JSON.parse(localSaved);
+              setDenominationCounts(parsed.counts || { ...emptyDenominations });
+              setDenominationRemarks(parsed.remarks || '');
+              setSavedAt(parsed.savedAt || null);
+            } catch (err) {
+              setDenominationCounts({ ...emptyDenominations });
+              setDenominationRemarks('');
+              setSavedAt(null);
+            }
+          } else {
+            setDenominationCounts({ ...emptyDenominations });
+            setDenominationRemarks('');
+            setSavedAt(null);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching cashbook:', error);
+      // Fallback check local storage
+      const localSaved = localStorage.getItem(`tanmay_denom_${selectedDate}`);
+      if (localSaved) {
+        try {
+          const parsed = JSON.parse(localSaved);
+          setDenominationCounts(parsed.counts || { ...emptyDenominations });
+          setDenominationRemarks(parsed.remarks || '');
+          setSavedAt(parsed.savedAt || null);
+        } catch (err) {
+          setDenominationCounts({ ...emptyDenominations });
+          setSavedAt(null);
+        }
+      } else {
+        setDenominationCounts({ ...emptyDenominations });
+        setSavedAt(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -183,6 +272,108 @@ const Cashbook = () => {
 
   const cashAtHome = totalGreen - totalRed;
 
+  // Note calculator automatic calculations
+  const totalNotes = DENOMINATIONS.reduce((sum, d) => {
+    return sum + (parseInt(denominationCounts[d], 10) || 0);
+  }, 0);
+
+  const calculatorTotal = DENOMINATIONS.reduce((sum, d) => {
+    const count = parseInt(denominationCounts[d], 10) || 0;
+    return sum + (d * count);
+  }, 0);
+
+  // Match only integer rupee amount (ignoring paise/decimal points)
+  const integerCashbook = Math.trunc(cashAtHome);
+  const integerCalculator = Math.trunc(calculatorTotal);
+  const cashDifference = integerCalculator - integerCashbook;
+  const isCashMatched = integerCalculator === integerCashbook;
+
+  // Handlers for note calculator
+  const handleCountChange = (denom, val) => {
+    if (val === '' || /^\d+$/.test(val)) {
+      setDenominationCounts(prev => ({
+        ...prev,
+        [denom]: val
+      }));
+      setSaveSuccessMsg('');
+    }
+  };
+
+  const handleClearCounts = () => {
+    if (window.confirm('तुम्हाला नोटांची मोजणी रीसेट करायची आहे का? (Do you want to reset note counts?)')) {
+      setDenominationCounts({ ...emptyDenominations });
+      setSaveSuccessMsg('');
+    }
+  };
+
+  const handleSaveDenomination = async () => {
+    setIsSavingDenomination(true);
+    setSaveSuccessMsg('');
+    const countsPayload = {};
+    DENOMINATIONS.forEach(d => {
+      countsPayload[d] = parseInt(denominationCounts[d], 10) || 0;
+    });
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/cashbook/denomination`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: selectedDate,
+          counts: countsPayload,
+          totalNotes,
+          totalAmount: calculatorTotal,
+          cashbookBalance: cashAtHome,
+          isMatched: isCashMatched,
+          remarks: denominationRemarks
+        })
+      });
+      const result = await response.json();
+      if (result.success) {
+        const now = new Date().toISOString();
+        setSavedAt(now);
+        setSaveSuccessMsg('चलन मोजणी यशस्वीरीत्या जतन झाली! (Saved successfully)');
+        localStorage.setItem(`tanmay_denom_${selectedDate}`, JSON.stringify({
+          counts: denominationCounts,
+          remarks: denominationRemarks,
+          savedAt: now
+        }));
+        setTimeout(() => setSaveSuccessMsg(''), 4500);
+      } else {
+        alert(result.message || 'Failed to save denomination');
+      }
+    } catch (err) {
+      console.warn('Backend save error, fallback to local storage:', err);
+      const now = new Date().toISOString();
+      setSavedAt(now);
+      localStorage.setItem(`tanmay_denom_${selectedDate}`, JSON.stringify({
+        counts: denominationCounts,
+        remarks: denominationRemarks,
+        savedAt: now
+      }));
+      setSaveSuccessMsg('स्थानिकरीत्या जतन केले (Saved locally)');
+      setTimeout(() => setSaveSuccessMsg(''), 4500);
+    } finally {
+      setIsSavingDenomination(false);
+    }
+  };
+
+  const scrollToCalculator = () => {
+    if (calculatorRef.current) {
+      calculatorRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const formatSavedTime = (isoString) => {
+    if (!isoString) return '';
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return '';
+    }
+  };
+
   const formatDateReadable = (dateStr) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
@@ -265,6 +456,21 @@ const Cashbook = () => {
             <span className={`value ${cashAtHome >= 0 ? 'positive' : 'negative'}`}>
               ₹ {cashAtHome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
+            <button 
+              className="summary-match-pill-btn hide-on-print" 
+              onClick={scrollToCalculator}
+              title="चलन मोजणी पहा (Click to inspect Note Calculator)"
+            >
+              {isCashMatched ? (
+                <span className="summary-pill pill-matched">
+                  <CheckCircle2 size={15} /> रोकड जुळली (Cash Matched)
+                </span>
+              ) : (
+                <span className="summary-pill pill-unmatched">
+                  <XCircle size={15} /> फरक: ₹ {Math.abs(cashDifference).toLocaleString('en-IN')}
+                </span>
+              )}
+            </button>
           </div>
         </div>
         <div className="math-breakdown hide-on-print">
@@ -639,6 +845,272 @@ const Cashbook = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* 4. Note Denomination Calculator Section */}
+      <div className="note-calculator-section hide-on-print" ref={calculatorRef} id="note-calculator">
+        {/* Section Header */}
+        <div className="note-calc-header">
+          <div className="note-calc-title-box">
+            <div className="note-calc-icon-wrapper">
+              <Calculator size={26} />
+            </div>
+            <div>
+              <h3>दैनिक नोटा मोजणी (Daily Note Calculator)</h3>
+              <p className="subtitle">
+                १ ते ५०० रुपयांच्या सर्व नोटा/नाणी मोजून कॅशबुक शिल्लक रोकड तपासा (Denominations from ₹1 to ₹500)
+              </p>
+            </div>
+          </div>
+
+          <div className="note-calc-header-actions">
+            {savedAt && (
+              <span className="save-status-info">
+                <Check size={15} color="#10b981" /> जतन: {formatSavedTime(savedAt)}
+              </span>
+            )}
+            <button className="btn-secondary-calc" onClick={handleClearCounts} title="रीसेट करा (Clear All)">
+              <RotateCcw size={15} />
+              <span>रीसेट (Clear)</span>
+            </button>
+            <button 
+              className="btn-primary-calc" 
+              onClick={handleSaveDenomination} 
+              disabled={isSavingDenomination}
+            >
+              <Save size={16} />
+              <span>{isSavingDenomination ? 'जतन होत आहे...' : 'जतन करा (Save Daily)'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 9 Denomination Cards (₹500 to ₹1) */}
+        <div className="denom-grid">
+          {DENOMINATIONS.map(d => {
+            const config = DENOM_CONFIG[d];
+            const count = parseInt(denominationCounts[d], 10) || 0;
+            const subtotal = d * count;
+            const hasValue = count > 0;
+
+            return (
+              <div 
+                key={d} 
+                className={`denom-card ${hasValue ? 'has-value' : ''}`}
+                style={hasValue ? { borderColor: config.border } : {}}
+              >
+                <div className="denom-badge-group">
+                  <span 
+                    className="denom-pill"
+                    style={{ 
+                      backgroundColor: config.bg, 
+                      color: config.color,
+                      border: `1px solid ${config.border}`
+                    }}
+                  >
+                    {config.label}
+                  </span>
+                  <span className="denom-type-tag">{config.type}</span>
+                </div>
+
+                <span className="denom-multiply-symbol">×</span>
+
+                <div className="denom-input-wrapper">
+                  <input 
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={denominationCounts[d]}
+                    onChange={(e) => handleCountChange(d, e.target.value)}
+                    placeholder="0"
+                    className="denom-input"
+                    aria-label={`Count for ${config.label}`}
+                  />
+                </div>
+
+                <span className="denom-equals-symbol">=</span>
+
+                <div className={`denom-subtotal ${hasValue ? 'highlighted' : ''}`}>
+                  ₹ {subtotal.toLocaleString('en-IN')}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Overview Bar */}
+        <div className="note-calc-metrics-bar">
+          <div className="metric-chunk">
+            <span className="chunk-label">एकूण नोटा संख्या (Total Count)</span>
+            <span className="chunk-val">{totalNotes} नोटा</span>
+          </div>
+
+          <div className="metric-chunk">
+            <span className="chunk-label">कॅल्क्युलेटर मोजलेली रोकड (Physical Cash)</span>
+            <span className="chunk-val accent-green">
+              ₹ {calculatorTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+
+          <div className="metric-chunk">
+            <span className="chunk-label">कॅशबुक प्रमाणे रोकड (Cashbook Balance)</span>
+            <span className="chunk-val accent-orange">
+              ₹ {cashAtHome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+        </div>
+
+        {/* Balance Matching Block with Centered SVG Animated Tick / Cross */}
+        <div className="balance-matching-banner-section">
+          <div className="comparison-flex">
+            <div className="comparison-card lhs">
+              <span className="label">कॅशबुक शिल्लक (Cashbook Net Balance)</span>
+              <span className="value">
+                जमा (Green) - नावे (Red)
+                <div className="sub-calc">
+                  = <strong>₹ {cashAtHome.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                  {cashAtHome % 1 !== 0 && (
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', marginTop: '3px' }}>
+                      (रुपये: ₹ {integerCashbook.toLocaleString('en-IN')})
+                    </span>
+                  )}
+                </div>
+              </span>
+            </div>
+
+            <div className="comparison-vs">
+              <span>{isCashMatched ? '=' : '≠'}</span>
+            </div>
+
+            <div className="comparison-card rhs">
+              <span className="label">कॅल्क्युलेटर रोकड (Calculated Cash Count)</span>
+              <span className="value">
+                {totalNotes} नोटा/नाणी मोजणी
+                <div className="sub-calc">
+                  = <strong>₹ {calculatorTotal.toLocaleString('en-IN')}</strong>
+                </div>
+              </span>
+            </div>
+          </div>
+
+          {/* Popping animated centered matched / unmatched status indicator */}
+          <motion.div 
+            className={`match-status-center-card ${isCashMatched ? 'matched' : 'unmatched'}`}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ 
+              type: "spring",
+              stiffness: 260,
+              damping: 20
+            }}
+            key={`${isCashMatched}-${calculatorTotal}-${cashAtHome}`}
+          >
+            <div className="status-circle-wrapper">
+              {isCashMatched ? (
+                <svg className="checkmark-svg" viewBox="0 0 52 52">
+                  <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none" />
+                  <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+                </svg>
+              ) : (
+                <svg className="crossmark-svg" viewBox="0 0 52 52">
+                  <circle className="crossmark-circle" cx="26" cy="26" r="25" fill="none" />
+                  <path className="crossmark-line1" fill="none" d="M16 16 L36 36" />
+                  <path className="crossmark-line2" fill="none" d="M36 16 L16 36" />
+                </svg>
+              )}
+            </div>
+            <div className="status-info-centered">
+              <h4 className="status-title">
+                {isCashMatched ? 'रोकड तंतोतंत जुळली (Cash Matched)' : 'रोकड जुळत नाही (Cash Unmatched)'}
+              </h4>
+              <p className="status-desc">
+                {isCashMatched 
+                  ? `कॅशबुक शिल्लक (₹ ${integerCashbook.toLocaleString('en-IN')}) आणि मोजलेली प्रत्यक्ष रोकड (₹ ${integerCalculator.toLocaleString('en-IN')}) जुळली आहे. (पैसे सोडून मोजणी बरोबर जुळली)` 
+                  : (cashDifference > 0 
+                     ? `जादा रोकड (Excess Cash): मोजलेली प्रत्यक्ष रोकड कॅशबुकपेक्षा ₹ ${Math.abs(cashDifference).toLocaleString('en-IN')} ने जास्त आहे.`
+                     : `कमी रोकड (Shortage / Deficit): मोजलेली प्रत्यक्ष रोकड कॅशबुकपेक्षा ₹ ${Math.abs(cashDifference).toLocaleString('en-IN')} ने कमी आहे.`
+                    )
+                }
+              </p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Footer: Remarks & Save button */}
+        <div className="note-calc-footer">
+          <div className="remarks-input-wrapper">
+            <input 
+              type="text" 
+              placeholder="नोंद किंवा शेरा टाका (उदा. तन्मय द्वारे रोकड पडताळणी पूर्ण)..."
+              value={denominationRemarks}
+              onChange={(e) => setDenominationRemarks(e.target.value)}
+              className="remarks-input"
+            />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {saveSuccessMsg && (
+              <span className="save-success-badge">
+                <Check size={14} /> {saveSuccessMsg}
+              </span>
+            )}
+            <button 
+              className="btn-primary-calc" 
+              onClick={handleSaveDenomination} 
+              disabled={isSavingDenomination}
+            >
+              <Save size={16} />
+              <span>{isSavingDenomination ? 'जतन करत आहे...' : 'जतन करा (Save Denomination)'}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Printable Cash Denomination Slip (Appears when printing Daily Cashbook) */}
+      <div className="print-denomination-slip">
+        <div className="print-denom-title">दैनिक रोकड चलन मोजणी तक्ता (PHYSICAL CASH DENOMINATION STATEMENT)</div>
+        <table className="print-denom-table">
+          <thead>
+            <tr>
+              <th style={{ width: '25%' }}>चलन (Denomination)</th>
+              <th style={{ width: '25%', textAlign: 'center' }}>नोटांची संख्या (Count)</th>
+              <th style={{ width: '25%', textAlign: 'right' }}>एकूण रक्कम (Amount ₹)</th>
+              <th style={{ width: '25%' }}>शेरा (Remarks)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {DENOMINATIONS.map(d => {
+              const count = parseInt(denominationCounts[d], 10) || 0;
+              const amt = d * count;
+              return (
+                <tr key={d}>
+                  <td><strong>₹ {d}</strong> ({DENOM_CONFIG[d].type})</td>
+                  <td style={{ textAlign: 'center' }}>{count > 0 ? count : '-'}</td>
+                  <td style={{ textAlign: 'right' }}>{count > 0 ? `₹ ${amt.toLocaleString('en-IN')}` : '-'}</td>
+                  <td>{d === 500 && denominationRemarks ? denominationRemarks : ''}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="print-denom-footer-row">
+              <td>एकूण नोटा (Total Notes):</td>
+              <td style={{ textAlign: 'center' }}><strong>{totalNotes}</strong></td>
+              <td style={{ textAlign: 'right' }}><strong>₹ {calculatorTotal.toLocaleString('en-IN')}</strong></td>
+              <td>{isCashMatched ? '✅ रोकड जुळली (MATCHED)' : '❌ फरक (UNMATCHED)'}</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div className="print-reconciliation-box">
+          <div>
+            <strong>कॅशबुक शिल्लक (Cashbook Balance):</strong> ₹ {cashAtHome.toLocaleString('en-IN')} &nbsp;|&nbsp; 
+            <strong> प्रत्यक्ष मोजलेली रोकड (Physical Cash):</strong> ₹ {calculatorTotal.toLocaleString('en-IN')} &nbsp;|&nbsp; 
+            <strong> फरक (Diff):</strong> ₹ {Math.abs(cashDifference).toLocaleString('en-IN')}
+          </div>
+          <div className="print-stamp-box">
+            {isCashMatched ? 'VERIFIED & BALANCED ✓' : 'DIFFERENCE DETECTED ⚠'}
+          </div>
+        </div>
       </div>
 
       {/* Manual Entry Dialog Modal */}
